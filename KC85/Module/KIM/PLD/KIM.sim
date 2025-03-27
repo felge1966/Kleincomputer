@@ -1,0 +1,48 @@
+%SIGNAL
+PIN   3 =  A2 
+PIN   4 =  A3 
+PIN   5 =  A4 
+PIN   6 =  A7 
+PIN  19 =  CFF 
+PIN  15 = !CTC 
+PIN   9 =  IORQ 
+PIN  12 =  KB 
+PIN  13 =  MEI 
+PIN  14 =  MEO 
+PIN   1 =  P1 
+PIN   2 =  P2 
+PIN  17 = !PIO 
+PIN  18 =  QFF 
+PIN   7 =  RD 
+PIN  16 = !SIO 
+PIN  11 =  SW 
+PIN   8 =  WR 
+%END
+
+%FIELD
+%END
+
+%EQUATION
+!CFF =>
+    !A2 & !A3 & !A4 & A7 & !IORQ & P1 & P2 & SW & WR
+
+!CTC =>
+    A2 & A3 & !A4 & !A7 & !IORQ & MEI & P2 & QFF & SW
+
+!KB =>
+    !A2 & !A3 & !A4 & A7 & !IORQ & P1 & P2 & RD & SW
+
+!MEO =>
+    CTC
+  # !MEI
+  # !PIO
+  # !SIO
+  # A3 & !A4 & A7 & !IORQ & P2
+
+!PIO =>
+    !A2 & !A3 & !A4 & A7 & !IORQ & MEI & P2 & SW
+
+!SIO =>
+    !A2 & A3 & !A4 & A7 & !IORQ & MEI & P2 & QFF & SW
+
+%END

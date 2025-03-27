@@ -1,0 +1,36 @@
+P1 
+P2
+A2
+A3
+A4
+A5
+A6
+A7
+RD
+WR
+IOQR
+Gnd
+
+SW
+/KB
+MEI
+MEO
+/CTC
+/SIO
+/PIO
+QFF
+CFF
+5P
+
+/PIO = /A2 * /A3 * /A4 * P2 *A7 * MEI * SW * /IORQ
+/SIO = /A2 * A3 * /A4 * P2 * A7 * MEI * SW * /IORQ  * QFF 
+/CTC = A2 * A3 * /A4 * P2 * /A7 * MEI * SW * /IORQ  * QFF 
+
+
+QFF.TRST=M GND
+MEI.TRST=GND
+
+/CFF = P1 * /A2 * /A3 * /A4 * P2 * A7 * WR * /IORQ * SW
+/KB = P1 * /A2 * /A3 * /A4 * P2 * A7 * RD * /IORQ * SW
+/MEO = /MEI + /PIO + /SIO + CTC + A3 * /A4 * P2 * A7 * /IORQ
+ 

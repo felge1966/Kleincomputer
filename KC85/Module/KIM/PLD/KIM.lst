@@ -1,0 +1,54 @@
+LISTING FOR LOGIC DESCRIPTION FILE: KIM.pld                          Page 1
+
+CUPL(WM): Universal Compiler for Programmable Logic
+Version 5.0a Serial# 60008009
+Copyright (c) 1983, 1998 Logical Devices, Inc.
+Created Sun Apr 07 17:02:54 2024
+
+  1:Name     Name ;
+  2:PartNo   00 ;
+  3:Date     07.04.2024 ;
+  4:Revision 01 ;
+  5:Designer Engineer ;
+  6:Company  felge1966 ;
+  7:Assembly None ;
+  8:Location  ;
+  9:Device   G16V8;
+ 10:
+ 11:/* *************** INPUT PINS *********************/
+ 12:PIN 1 = P1                        ; /*                                 */ 
+ 13:PIN 2 = P2                        ; /*                                 */ 
+ 14:PIN 3 = A2                        ; /*                                 */ 
+ 15:PIN 4 = A3                        ; /*                                 */ 
+ 16:PIN 5 = A4                        ; /*                                 */ 
+ 17:PIN 6 = A7                        ; /*                                 */ 
+ 18:PIN 7 = RD                        ; /*                                 */ 
+ 19:PIN 8 = WR                        ; /*                                 */ 
+ 20:PIN 9 = IORQ                        ; /*                                 */ 
+ 21:PIN 11 = SW                        ; /*                                 */ 
+ 22:PIN 12 = KB                        ; /*                                 */ 
+ 23:PIN 13 = MEI                        ; /*                                 */ 
+ 24:
+ 25:/* *************** OUTPUT PINS *********************/
+ 26:
+ 27:PIN 14 = MEO                        ; /*                                 */ 
+ 28:PIN 15 = !CTC                        ; /*                                 */ 
+ 29:PIN 16 = !SIO                        ; /*                                 */ 
+ 30:PIN 17 = !PIO                        ; /*                                 */ 
+ 31:PIN 18 = QFF                        ; /*                                 */ 
+ 32:PIN 19 = CFF                        ; /*                                 */ 
+ 33:
+ 34:
+ 35:
+ 36:/* Equ */
+ 37:
+ 38:!PIO = !A2 & !A3 & !A4 & P2 & A7& MEI & SW & !IORQ; 
+ 39:!SIO = !A2 & A3 & !A4 & P2 & A7 & MEI & SW & !IORQ & QFF;
+ 40:!CTC = A2 & A3 & !A4 & P2 & !A7 & MEI & SW & !IORQ & QFF;
+ 41:!CFF = P1 & !A2 & !A3 & !A4 & P2 & A7 & WR & !IORQ & SW ;
+ 42:!KB = P1 & !A2 & !A3 & !A4 & P2 & A7 & RD & !IORQ & SW ;
+ 43:!MEO = !MEI # !PIO # !SIO # CTC # A3 & !A4 & P2 & A7 & !IORQ ;
+ 44:
+
+
+

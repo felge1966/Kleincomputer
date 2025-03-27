@@ -1,0 +1,77 @@
+
+*******************************************************************************
+                                     Name
+*******************************************************************************
+
+CUPL(WM)        5.0a Serial# 60008009
+Device          virtual  Library DLIB-h-40-1
+Created         Sun Apr 07 17:02:54 2024
+Name            Name 
+Partno          00 
+Revision        01 
+Date            07.04.2024 
+Designer        Engineer 
+Company         felge1966 
+Assembly        None 
+Location        
+
+===============================================================================
+                            Expanded Product Terms
+===============================================================================
+
+!CFF =>
+    !A2 & !A3 & !A4 & A7 & !IORQ & P1 & P2 & SW & WR
+
+!CTC =>
+    A2 & A3 & !A4 & !A7 & !IORQ & MEI & P2 & QFF & SW
+
+!KB =>
+    !A2 & !A3 & !A4 & A7 & !IORQ & P1 & P2 & RD & SW
+
+!MEO =>
+    CTC
+  # !MEI
+  # !PIO
+  # !SIO
+  # A3 & !A4 & A7 & !IORQ & P2
+
+!PIO =>
+    !A2 & !A3 & !A4 & A7 & !IORQ & MEI & P2 & SW
+
+!SIO =>
+    !A2 & A3 & !A4 & A7 & !IORQ & MEI & P2 & QFF & SW
+
+
+===============================================================================
+                                 Symbol Table
+===============================================================================
+
+Pin Variable                                    Pterms   Max     Min    
+Pol   Name              Ext     Pin     Type     Used   Pterms  Level   
+--- --------            ---     ---     ----    ------  ------  -----   
+
+    A2                          3        V        -       -       -     
+    A3                          4        V        -       -       -     
+    A4                          5        V        -       -       -     
+    A7                          6        V        -       -       -     
+    CFF                         19       V        1       0       2     
+ !  CTC                         15       V        1       0       2     
+    IORQ                        9        V        -       -       -     
+    KB                          12       V        1       0       2     
+    MEI                         13       V        -       -       -     
+    MEO                         14       V        5       0       2     
+    P1                          1        V        -       -       -     
+    P2                          2        V        -       -       -     
+ !  PIO                         17       V        1       0       2     
+    QFF                         18       V        -       -       -     
+    RD                          7        V        -       -       -     
+ !  SIO                         16       V        1       0       2     
+    SW                          11       V        -       -       -     
+    WR                          8        V        -       -       -     
+
+
+LEGEND    D : default variable         F : field      G : group
+          I : intermediate variable    N : node       M : extended node
+          U : undefined                V : variable   X : extended variable
+          T : function
+

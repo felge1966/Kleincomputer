@@ -1,0 +1,43 @@
+Name     Name ;
+PartNo   00 ;
+Date     07.04.2024 ;
+Revision 01 ;
+Designer Engineer ;
+Company  felge1966 ;
+Assembly None ;
+Location  ;
+Device   G16V8;
+
+/* *************** INPUT PINS *********************/
+PIN 1 = P1                        ; /*                                 */ 
+PIN 2 = P2                        ; /*                                 */ 
+PIN 3 = A2                        ; /*                                 */ 
+PIN 4 = A3                        ; /*                                 */ 
+PIN 5 = A4                        ; /*                                 */ 
+PIN 6 = A7                        ; /*                                 */ 
+PIN 7 = RD                        ; /*                                 */ 
+PIN 8 = WR                        ; /*                                 */ 
+PIN 9 = IORQ                        ; /*                                 */ 
+PIN 11 = SW                        ; /*                                 */ 
+PIN 12 = KB                        ; /*                                 */ 
+PIN 13 = MEI                        ; /*                                 */ 
+
+/* *************** OUTPUT PINS *********************/
+
+PIN 14 = MEO                        ; /*                                 */ 
+PIN 15 = !CTC                        ; /*                                 */ 
+PIN 16 = !SIO                        ; /*                                 */ 
+PIN 17 = !PIO                        ; /*                                 */ 
+PIN 18 = QFF                        ; /*                                 */ 
+PIN 19 = CFF                        ; /*                                 */ 
+
+
+
+/* Equ */
+
+!PIO = !A2 & !A3 & !A4 & P2 & A7& MEI & SW & !IORQ; 
+!SIO = !A2 & A3 & !A4 & P2 & A7 & MEI & SW & !IORQ & QFF;
+!CTC = A2 & A3 & !A4 & P2 & !A7 & MEI & SW & !IORQ & QFF;
+!CFF = P1 & !A2 & !A3 & !A4 & P2 & A7 & WR & !IORQ & SW ;
+!KB = P1 & !A2 & !A3 & !A4 & P2 & A7 & RD & !IORQ & SW ;
+!MEO = !MEI # !PIO # !SIO # CTC # A3 & !A4 & P2 & A7 & !IORQ ;

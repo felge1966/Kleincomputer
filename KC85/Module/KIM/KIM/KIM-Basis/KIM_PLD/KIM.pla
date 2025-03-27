@@ -1,0 +1,37 @@
+#$ TOOL CUPL
+# Berkeley PLA format generated using CUPL(WM) 5.0a
+# Serial#  60008009
+# Created  Sun Apr 07 17:02:54 2024
+#
+#    Name        Name
+#    Partno      00
+#    Revision    01
+#    Date        07.04.2024
+#    Designer    Engineer
+#    Company     felge1966
+#    Assembly    None
+#    Location    
+#
+#$ TITLE  Name
+#$ MODULE  Name
+#$ JEDECFILE  Name
+#$ DEVICE  virtual
+#$ PINS  18 A2+:3 A3+:4 A4+:5 A7+:6 CFF+:19 CTC+:15 IORQ+:9 KB+:12 MEI+:13 MEO+:14 P1+:1 P2+:2 PIO+:17 QFF+:18 RD+:7 SIO+:16 SW+:11 WR+:8 
+.i 15
+.o 6
+.type f
+.ilb  A2 A3 A4 A7 CTC IORQ MEI P1 P2 PIO QFF RD SIO SW WR 
+.ob   CFF- CTC KB- MEO- PIO SIO 
+.phase 111111
+.p 10
+0001-0-11----11 100000
+1100-01-1-1--1- 010000
+0001-0-11--1-1- 001000
+----0---------- 000100
+------0-------- 000100
+---------1----- 000100
+------------1-- 000100
+-101-0--1------ 000100
+0001-01-1----1- 000010
+0101-01-1-1--1- 000001
+.e

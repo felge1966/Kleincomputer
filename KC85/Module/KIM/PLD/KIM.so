@@ -1,0 +1,28 @@
+CSIM(WM): CUPL Simulation Program
+Version 5.0a Serial# 60008009
+Copyright (c) 1983, 1998 Logical Devices, Inc.
+CREATED Sun Apr 07 17:02:54 2024
+
+LISTING FOR SIMULATION FILE: KIM.si
+
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbers
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbers
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersA2
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersA3
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersA4
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersA7
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersCFF
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersCTC
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersIORQ
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersKB
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersMEI
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersMEO
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersP1
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersP2
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersPIO
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersQFF
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersRD
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersSIO
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersSW
+[0033sa] Please note: jedec vectors cannot be created with undefined pin numbersWR
+[0001sa] could not open:  C:\WINCUPL\FELGE1966\KC85\KIM\KIM.si
