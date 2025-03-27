@@ -1,0 +1,50 @@
+Name            Basic3;
+Partno          CA0010;
+Revision        02;
+Date            9/22/84;
+Designer        Felgentreu;
+Company         Felge1966.;
+Assembly        Basic3;
+Location        U12;
+Device          G16V8;
+
+/************************************************************************/
+/* This device generates the chip select signals for the I/O functions. */
+/* It also enables the data bus transceiver for both memory and I/O     */
+/* write cycles.                                                        */
+/************************************************************************/
+
+/** Inputs **/
+
+pin [1..5] = [a11..15] ; 
+pin 6      = mreq ;   
+pin 7      = mein ; 
+pin 8      = ract ;  
+pin 9      = rd ;     
+pin 11     = res ;
+pin 12     = sel1 ;
+pin 13     = sel2 ;
+
+/** Outputs **/
+
+pin 19     = csrom ; 
+/* pin 18     = a15rom ; */
+pin 17     = csram ;
+pin 16     = moni ;
+/* pin 15     = mout ;   */
+/* pin 14     = a14rom ; */
+
+/** Declarations and Intermediate Variable Definitions  **/
+
+field   memaddr    = [a11..15] ;
+raml_eqn        = memaddr:[0000..3FFF] ;
+ram2_eqn        = memaddr:[4000..BFFF] ;
+/* ram3_eqn        = memaddr:[E000..E7FF] ; */
+rom_eqn         = memaddr:[C000..E7FF] ; 
+roms_eqn        = memaddr:[F000..F000] ;
+
+/** Logic Equations **/
+
+moni                = !mreq & !rd & roms_eqn ;
+csrom               = rom_eqn & !mreq & !mein & ract; 
+csram               = ram2_eqn & !mreq & !mein & sel2 & !sel1 # raml_eqn & !mreq & !mein & !sel2 & !sel1 ; 

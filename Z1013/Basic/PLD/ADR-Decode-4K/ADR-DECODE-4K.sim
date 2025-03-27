@@ -1,0 +1,50 @@
+%SIGNAL
+PIN   1 =  a10 
+PIN   2 =  a11 
+PIN   3 =  a12 
+PIN   4 =  a13 
+PIN   5 =  a14 
+PIN   6 =  a15 
+PIN   8 =  memdi 
+PIN   7 = !mreq 
+PIN  18 = !ramh 
+PIN  19 = !raml 
+PIN  17 = !rom 
+%END
+
+%FIELD
+FIELD memaddr = a10,a11,a12,a13,a14,a15
+%END
+
+%EQUATION
+!ramh =>
+    !mreq
+  # !memdi
+  # a13 & a14
+  # !a15
+
+ramh_eqn =>
+    !a13 & !a14 & a15
+  # a13 & !a14 & a15
+  # !a13 & a14 & a15
+
+!raml =>
+    !mreq
+  # !memdi
+  # a15
+
+raml_eqn =>
+    !a15
+
+!rom =>
+    !mreq
+  # !memdi
+  # !a12
+  # !a13
+  # !a14
+  # !a15
+
+rom_eqn =>
+    a12 & a13 & a14 & a15
+
+%END

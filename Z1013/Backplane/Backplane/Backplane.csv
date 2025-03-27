@@ -1,0 +1,8 @@
+"ID";"Bezeichner";"Gehäuse";"Stückzahl";"Bezeichnung";"Anbieter und Referenz";
+1;"J7,J1,J4,J10,J14";"DIN41612_C_3x32_Female_Vertical_THT-Gross_K1520";5;"C64AC";;;
+2;"C1001,C1002,C1003,C1004";"C_Disc_D3.0mm_W2.0mm_P2.50mm";4;"100nF";;;
+3;"J2,J3,J5,J6,J8,J9,J11,J12,J15,J16";"PinSocket_1x02_P2.54mm_Vertical";10;"Conn_01x02";;;
+4;"J13,J1004";"JST_EH_B5B-EH-A_1x05_P2.50mm_Vertical";2;"Screw_Terminal_01x05";;;
+5;"J1001,J1002,J1003";"PinHeader_1x03_P2.54mm_Vertical";3;"Conn_01x03";;;
+6;"U1001";"TO-220-3_Horizontal_TabUp";1;"L7905";;;
+7;"U1002";"DIP-24_W15.24mm_LongPads";1;"DCDC";;;

@@ -1,0 +1,41 @@
+Name            Adrdec;
+Partno          Ic1;
+Revision        03;
+Date            04/10/23;
+Designer        Felgentreu;
+Company         Felge1966.;
+Assembly        Z1013 Memory Decoder;
+Location        IC1;
+Device          G16V8;
+
+/************************************************************************/
+/* This device generates the chip select signals for the mem functions. */
+/* It also enables the data bus transceiver for both memory             */
+/* write cycles.                                                        */
+/************************************************************************/
+
+/** Inputs **/
+
+pin [1..6] = [a10..15] ;             /* system addresses a10 - a15   */
+pin 7      = !mreq ;                 /* same signal as ioacc         */
+pin 8      = memdi ;                 /* on-board memory access       */
+
+/** Outputs **/
+
+pin 19     = !raml ;                   /* on-board I/O being accessed  */
+pin 18     = !ramh ;                 /* parallel port chip select    */
+pin 17     = !rom ;                   /* real-time clock chip select  */
+
+/** Declarations and Intermediate Variable Definitions  **/
+
+field   memaddr    = [a10..15] ;
+raml_eqn        = memaddr:[0000..7FFF] ;  /*******************************/
+ramh_eqn        = memaddr:[8000..DFFF] ;  /*          MEM Address        */
+rom_eqn         = memaddr:[F000..FFFF] ;  /*             Ranges          */
+                                          /*******************************/
+
+/** Logic Equations **/
+
+raml              = !mreq & memdi & raml_eqn ;
+ramh              = !mreq & memdi & ramh_eqn ;
+rom               = !mreq & memdi & rom_eqn ;

@@ -1,0 +1,68 @@
+%SIGNAL
+PIN   1 =  a11 
+PIN   2 =  a12 
+PIN   3 =  a13 
+PIN   4 =  a14 
+PIN   5 =  a15 
+PIN  17 =  csram 
+PIN  19 =  csrom 
+PIN   7 =  mein 
+PIN  16 =  moni 
+PIN   6 =  mreq 
+PIN   8 =  ract 
+PIN   9 =  rd 
+PIN  11 =  res 
+PIN  12 =  sel1 
+PIN  13 =  sel2 
+%END
+
+%FIELD
+FIELD memaddr = a11,a12,a13,a14,a15
+%END
+
+%EQUATION
+!csram =>
+    mreq
+  # mein
+  # !a14 & !a15 & sel2
+  # sel1
+  # a14 & !sel2
+  # a15 & !sel2
+  # a14 & a15
+
+!csrom =>
+    a11 & a13
+  # a12 & a13
+  # !a14
+  # !a15
+  # mreq
+  # mein
+  # !ract
+
+!moni =>
+    mreq
+  # rd
+  # a11
+  # !a12
+  # !a13
+  # !a14
+  # !a15
+
+ram2_eqn =>
+    a14 & !a15
+  # !a14 & a15
+
+raml_eqn =>
+    !a14 & !a15
+
+rom_eqn =>
+    !a11 & !a12 & !a13 & a14 & a15
+  # a11 & !a12 & !a13 & a14 & a15
+  # !a11 & a12 & !a13 & a14 & a15
+  # a11 & a12 & !a13 & a14 & a15
+  # !a11 & !a12 & a13 & a14 & a15
+
+roms_eqn =>
+    !a11 & a12 & a13 & a14 & a15
+
+%END

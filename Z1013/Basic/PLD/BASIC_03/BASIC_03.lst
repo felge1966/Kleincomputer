@@ -1,0 +1,63 @@
+LISTING FOR LOGIC DESCRIPTION FILE: BASIC_03.pld                     Page 1
+
+CUPL(WM): Universal Compiler for Programmable Logic
+Version 5.0a Serial# 60008009
+Copyright (c) 1983, 1998 Logical Devices, Inc.
+Created Sun Mar 09 17:40:43 2025
+
+  1:Name            Basic3;
+  2:Partno          CA0010;
+  3:Revision        02;
+  4:Date            9/22/84;
+  5:Designer        Felgentreu;
+  6:Company         Felge1966.;
+  7:Assembly        Basic3;
+  8:Location        U12;
+  9:Device          G16V8;
+ 10:
+ 11:/************************************************************************/
+ 12:/* This device generates the chip select signals for the I/O functions. */
+ 13:/* It also enables the data bus transceiver for both memory and I/O     */
+ 14:/* write cycles.                                                        */
+ 15:/************************************************************************/
+ 16:
+ 17:/** Inputs **/
+ 18:
+ 19:pin [1..5] = [a11..15] ; 
+ 20:pin 6      = mreq ;   
+ 21:pin 7      = mein ; 
+ 22:pin 8      = ract ;  
+ 23:pin 9      = rd ;     
+ 24:pin 11     = res ;
+ 25:pin 12     = sel1 ;
+ 26:pin 13     = sel2 ;
+ 27:
+ 28:/** Outputs **/
+ 29:
+ 30:pin 19     = csrom ; 
+ 31:/* pin 18     = a15rom ; */
+ 32:pin 17     = csram ;
+ 33:pin 16     = moni ;
+ 34:/* pin 15     = mout ;   */
+ 35:/* pin 14     = a14rom ; */
+ 36:
+ 37:/** Declarations and Intermediate Variable Definitions  **/
+ 38:
+ 39:field   memaddr    = [a11..15] ;
+ 40:raml_eqn        = memaddr:[0000..3FFF] ;
+ 41:ram2_eqn        = memaddr:[4000..BFFF] ;
+ 42:/* ram3_eqn        = memaddr:[E000..E7FF] ; */
+ 43:rom_eqn         = memaddr:[C000..E7FF] ; 
+ 44:roms_eqn        = memaddr:[F000..F000] ;
+ 45:
+ 46:/** Logic Equations **/
+ 47:
+ 48:moni                = !mreq & !rd & roms_eqn ;
+ 49:csrom               = rom_eqn & !mreq & !mein & ract; 
+ 50:csram               = ram2_eqn & !mreq & !mein & sel2 & !sel1 # raml_eqn & !mreq & !mein & !sel2 & !sel1 ; 
+ 51:
+
+
+
+Jedec Fuse Checksum       (5c4c)
+Jedec Transmit Checksum   (1a05)

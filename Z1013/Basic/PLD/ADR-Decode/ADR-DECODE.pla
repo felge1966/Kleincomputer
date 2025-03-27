@@ -1,0 +1,35 @@
+# Berkeley PLA format generated using
+#
+# CUPL(WM)        5.0a Serial# 60008009
+# Device          g16v8s  Library DLIB-h-40-9
+# Created         Mon Mar 27 17:27:43 2023
+# Name            Adr-decode
+# Partno          CA0010
+# Revision        02
+# Date            9/22/84
+# Designer        Felgentreu
+# Company         Felge1966.
+# Assembly        PC Multi-Function
+# Location        U12
+#
+# Inputs  a10 a11 a12 a13 
+#         a14 a15 !memdi !mreq 
+#         !ramh !raml !rom 
+# Outputs !ramh !raml !rom 
+.i 11
+.o 3
+.p 13
+-------0--- 1~~
+------1---- 1~~
+-0-11------ 1~~
+--011------ 1~~
+-----0----- 1~~
+-------0--- ~1~
+------1---- ~1~
+-----1----- ~1~
+-1--------- ~~1
+--0-------- ~~1
+---0------- ~~1
+----0------ ~~1
+-----0----- ~~1
+.end

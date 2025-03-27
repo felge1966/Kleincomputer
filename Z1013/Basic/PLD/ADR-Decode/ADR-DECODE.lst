@@ -1,0 +1,56 @@
+LISTING FOR LOGIC DESCRIPTION FILE: ADR-DECODE.pld                   Page 1
+
+CUPL(WM): Universal Compiler for Programmable Logic
+Version 5.0a Serial# 60008009
+Copyright (c) 1983, 1998 Logical Devices, Inc.
+Created Mon Mar 27 17:27:43 2023
+
+  1:Name            Adr-decode;
+  2:Partno          CA0010;
+  3:Revision        02;
+  4:Date            9/22/84;
+  5:Designer        Felgentreu;
+  6:Company         Felge1966.;
+  7:Assembly        PC Multi-Function;
+  8:Location        U12;
+  9:Device          G16V8;
+ 10:
+ 11:/************************************************************************/
+ 12:/* This device generates the chip select signals for the I/O functions. */
+ 13:/* It also enables the data bus transceiver for both memory and I/O     */
+ 14:/* write cycles.                                                        */
+ 15:/************************************************************************/
+ 16:
+ 17:/** Inputs **/
+ 18:
+ 19:pin [1..6] = [a10..15] ;             /* system addresses a2 - a9     */
+ 20:pin 7      = !mreq ;                 /* same signal as ioacc         */
+ 21:pin 8      = !memdi ;                /* on-board memory access       */
+ 22:
+ 23:/** Outputs **/
+ 24:
+ 25:pin 19     = !raml ;                   /* on-board I/O being accessed  */
+ 26:pin 18     = !ramh ;                 /* parallel port chip select    */
+ 27:pin 17     = !rom ;                   /* real-time clock chip select  */
+ 28:
+ 29:/** Declarations and Intermediate Variable Definitions  **/
+ 30:
+ 31:field   memaddr    = [a10..15] ;
+ 32:raml_eqn        = memaddr:[0000..7FFF] ;  /*******************************/
+ 33:ramh1_eqn       = memaddr:[8000..DFFF] ;  /*          MEM Address        */
+ 34:rom_eqn         = memaddr:[F000..F7FF] ;  /*             Ranges          */
+ 35:ramh2_eqn       = memaddr:[F800..FFFF] ;  /*******************************/
+ 36:
+ 37:/** Logic Equations **/
+ 38:
+ 39:raml              = mreq & !memdi & raml_eqn ;
+ 40:ramh              = mreq & !memdi & ramh1_eqn #
+ 41:                    mreq & !memdi & ramh2_eqn ;
+ 42:rom               = rom_eqn ;
+ 43:
+ 44:
+
+
+
+Jedec Fuse Checksum       (3e01)
+Jedec Transmit Checksum   (e136)

@@ -1,0 +1,14 @@
+"ID";"Bezeichner";"Gehäuse";"Stückzahl";"Bezeichnung";"Anbieter und Referenz";
+1;"D2,D1";"D_DO-35_SOD27_P7.62mm_Horizontal";2;"1N4148";;;
+2;"C6";"CP_Axial_L18.0mm_D8.0mm_P25.00mm_Horizontal";1;"100µF";;;
+3;"X1";"K1520_EFS2x29_DIN_male";1;"K1520_2x29-AC";;;
+4;"U2";"DIP-28_W15.24mm";1;"27C512";;;
+5;"U4";"DIP-4_W7.62mm";1;"A302-Analog";;;
+6;"R2";"R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal";1;"1K";;;
+7;"R1";"R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal";1;"110K";;;
+8;"C5";"CP_Radial_D6.3mm_P2.50mm";1;"10µF";;;
+9;"U3";"DIP-32_W15.24mm";1;"628128_DIP32_SSOP32";;;
+10;"U1";"DIP-20_W7.62mm";1;"GAL16V8";;;
+11;"SW1";"SW_DIP_SPSTx04_Piano_10.8x11.72mm_W7.62mm_P2.54mm";1;"SW_DIP_x04";;;
+12;"RN1";"R_Array_SIP5";1;"4K7";;;
+13;"C4,C3,C2,C1";"C_Axial_L3.8mm_D2.6mm_P10.00mm_Horizontal";4;"100nF";;;

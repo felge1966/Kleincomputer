@@ -1,0 +1,44 @@
+# Berkeley PLA format generated using
+#
+# CUPL(WM)        5.0a Serial# 60008009
+# Device          g16v8s  Library DLIB-h-40-9
+# Created         Sun Mar 09 17:40:43 2025
+# Name            Basic3
+# Partno          CA0010
+# Revision        02
+# Date            9/22/84
+# Designer        Felgentreu
+# Company         Felge1966.
+# Assembly        Basic3
+# Location        U12
+#
+# Inputs  a11 a12 a13 a14 
+#         a15 csram csrom mein 
+#         moni mreq ract rd 
+#         res sel1 sel2 
+# Outputs csram csrom moni 
+.i 15
+.o 3
+.p 21
+---------1----- 1~~
+-------1------- 1~~
+---00---------1 1~~
+-------------1- 1~~
+---1----------0 1~~
+----1---------0 1~~
+---11---------- 1~~
+1-1------------ ~1~
+-11------------ ~1~
+---0----------- ~1~
+----0---------- ~1~
+---------1----- ~1~
+-------1------- ~1~
+----------0---- ~1~
+---------1----- ~~1
+-----------1--- ~~1
+1-------------- ~~1
+-0------------- ~~1
+--0------------ ~~1
+---0----------- ~~1
+----0---------- ~~1
+.end
