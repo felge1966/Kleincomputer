@@ -1,0 +1,220 @@
+
+*******************************************************************************
+                                     CH376
+*******************************************************************************
+
+CUPL(WM)        5.0a Serial# 60008009
+Device          g20v8as  Library DLIB-h-40-1
+Created         Wed Mar 26 15:41:10 2025
+Name            CH376
+Partno          U1
+Revision        04
+Date            03/26/2025
+Designer        Felgentreu
+Company         Felge1966.
+Assembly        KC87_CH376
+Location        U1
+
+===============================================================================
+                            Expanded Product Terms
+===============================================================================
+
+ch376_eqn =>
+    !a2 & a3 & !a4 & a5 & !a6 & !a7
+
+!csch376 =>
+    a2
+  # !a3
+  # a4
+  # !a5
+  # a6
+  # a7
+  # iorq
+  # rd & wr
+
+!csram =>
+    mreq
+  # !ramon
+  # a14 & a15
+  # !a14 & !a15
+
+!csrom =>
+    mreq
+  # a11 & a13
+  # a12 & a13
+  # !a14
+  # !a15
+
+ioaddr =>
+    a2 , a3 , a4 , a5 , a6 , a7
+
+memaddr =>
+    a11 , a12 , a13 , a14 , a15
+
+ram1 =>
+    a14 & !a15 & !mreq & ramon
+
+ram1_eqn =>
+    a14 & !a15
+
+ram2 =>
+    !a14 & a15 & !mreq & ramon
+
+ram2_eqn =>
+    !a14 & a15
+
+rom_eqn =>
+    !a11 & !a12 & !a13 & a14 & a15
+  # a11 & !a12 & !a13 & a14 & a15
+  # !a11 & a12 & !a13 & a14 & a15
+  # a11 & a12 & !a13 & a14 & a15
+  # !a11 & !a12 & a13 & a14 & a15
+
+
+===============================================================================
+                                 Symbol Table
+===============================================================================
+
+Pin Variable                                    Pterms   Max     Min    
+Pol   Name              Ext     Pin     Type     Used   Pterms  Level   
+--- --------            ---     ---     ----    ------  ------  -----   
+
+    a2                          1        V        -       -       -     
+    a3                          2        V        -       -       -     
+    a4                          3        V        -       -       -     
+    a5                          4        V        -       -       -     
+    a6                          5        V        -       -       -     
+    a7                          6        V        -       -       -     
+    a11                         22       V        -       -       -     
+    a12                         14       V        -       -       -     
+    a13                         13       V        -       -       -     
+    a14                         11       V        -       -       -     
+    a15                         10       V        -       -       -     
+    ch376_eqn                   0        I        1       -       -     
+    csch376                     20       V        8       8       0     
+    csram                       17       V        4       8       0     
+    csrom                       21       V        5       8       0     
+    ioaddr                      0        F        -       -       -     
+    iorq                        7        V        -       -       -     
+    memaddr                     0        F        -       -       -     
+    mreq                        23       V        -       -       -     
+    r48k                        16       V        -       -       -     
+    ram1                        0        I        1       -       -     
+    ram1_eqn                    0        I        1       -       -     
+    ram2                        0        I        1       -       -     
+    ram2_eqn                    0        I        1       -       -     
+    ramon                       15       V        -       -       -     
+    rd                          8        V        -       -       -     
+    rom_eqn                     0        I        5       -       -     
+    wr                          9        V        -       -       -     
+
+
+LEGEND    D : default variable         F : field      G : group
+          I : intermediate variable    N : node       M : extended node
+          U : undefined                V : variable   X : extended variable
+          T : function
+
+
+===============================================================================
+                                   Fuse Plot
+===============================================================================
+
+Syn   02704 - Ac0   02705 x 
+
+Pin #22  02560  Pol x  02632  Ac1 - 
+ 00000 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 00040 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 00080 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 00120 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 00160 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 00200 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 00240 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 00280 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+Pin #21  02561  Pol -  02633  Ac1 x 
+ 00320 ------x--------------------------------- 
+ 00360 ----------x---------------------------x- 
+ 00400 ----------------------------------x---x- 
+ 00440 -------------------------------------x-- 
+ 00480 ---------------------------------x------ 
+ 00520 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 00560 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 00600 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+Pin #20  02562  Pol -  02634  Ac1 x 
+ 00640 --x------------------------------------- 
+ 00680 -x-------------------------------------- 
+ 00720 ----x----------------------------------- 
+ 00760 ---------x------------------------------ 
+ 00800 ------------x--------------------------- 
+ 00840 ----------------x----------------------- 
+ 00880 --------------------x------------------- 
+ 00920 ------------------------x---x----------- 
+Pin #19  02563  Pol x  02635  Ac1 - 
+ 00960 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01000 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01040 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01080 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01120 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01160 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01200 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01240 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+Pin #18  02564  Pol x  02636  Ac1 - 
+ 01280 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01320 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01360 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01400 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01440 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01480 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01520 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01560 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+Pin #17  02565  Pol -  02637  Ac1 x 
+ 01600 ------x--------------------------------- 
+ 01640 -------------------------------x-------- 
+ 01680 --------------------------------x---x--- 
+ 01720 ---------------------------------x---x-- 
+ 01760 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01800 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01840 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01880 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+Pin #16  02566  Pol x  02638  Ac1 - 
+ 01920 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 01960 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02000 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02040 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02080 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02120 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02160 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02200 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+Pin #15  02567  Pol x  02639  Ac1 - 
+ 02240 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02280 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02320 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02360 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02400 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02440 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02480 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+ 02520 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+
+
+LEGEND    X : fuse not blown 
+          - : fuse blown 
+
+===============================================================================
+                                 Chip Diagram
+===============================================================================
+
+                               ______________
+                              |    CH376     |
+                       a2 x---|1           24|---x Vcc                      
+                       a3 x---|2           23|---x mreq                     
+                       a4 x---|3           22|---x a11                      
+                       a5 x---|4           21|---x csrom                    
+                       a6 x---|5           20|---x csch376                  
+                       a7 x---|6           19|---x                          
+                     iorq x---|7           18|---x                          
+                       rd x---|8           17|---x csram                    
+                       wr x---|9           16|---x r48k                     
+                      a15 x---|10          15|---x ramon                    
+                      a14 x---|11          14|---x a12                      
+                      GND x---|12          13|---x a13                      
+                              |______________|
+

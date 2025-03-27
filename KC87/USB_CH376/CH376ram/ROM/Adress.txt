@@ -1,0 +1,9 @@
+Adresse:	
+ROM
+C000h-CFFFh	(4k, 2x 2K-EPROMs)
+
+
+
+USB-Modul CH376
+Portadresse: 	
+28h-29h
