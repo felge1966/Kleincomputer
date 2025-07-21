@@ -1,0 +1,75 @@
+%SIGNAL
+PIN   1 =  a2 
+PIN   2 =  a3 
+PIN   3 =  a4 
+PIN   4 =  a5 
+PIN   5 =  a6 
+PIN   6 =  a7 
+PIN  22 =  a11 
+PIN  14 =  a12 
+PIN  13 =  a13 
+PIN  11 =  a14 
+PIN  10 =  a15 
+PIN  20 =  csch376 
+PIN  17 =  csram 
+PIN  21 =  csrom 
+PIN   7 =  iorq 
+PIN  23 =  mreq 
+PIN  16 =  r48k 
+PIN  15 =  ramon 
+PIN   8 =  rd 
+PIN   9 =  wr 
+%END
+
+%FIELD
+FIELD ioaddr = a2,a3,a4,a5,a6,a7
+FIELD memaddr = a11,a12,a13,a14,a15
+%END
+
+%EQUATION
+ch376_eqn =>
+    !a2 & a3 & !a4 & a5 & !a6 & !a7
+
+!csch376 =>
+    a2
+  # !a3
+  # a4
+  # !a5
+  # a6
+  # a7
+  # iorq
+  # rd & wr
+
+!csram =>
+    mreq
+  # !ramon
+  # a14 & a15
+  # !a14 & !a15
+
+!csrom =>
+    mreq
+  # a11 & a13
+  # a12 & a13
+  # !a14
+  # !a15
+
+ram1 =>
+    a14 & !a15 & !mreq & ramon
+
+ram1_eqn =>
+    a14 & !a15
+
+ram2 =>
+    !a14 & a15 & !mreq & ramon
+
+ram2_eqn =>
+    !a14 & a15
+
+rom_eqn =>
+    !a11 & !a12 & !a13 & a14 & a15
+  # a11 & !a12 & !a13 & a14 & a15
+  # !a11 & a12 & !a13 & a14 & a15
+  # a11 & a12 & !a13 & a14 & a15
+  # !a11 & !a12 & a13 & a14 & a15
+
+%END
