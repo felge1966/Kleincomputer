@@ -1,0 +1,1905 @@
+;	BIOS-256K-RF
+;****************************************
+;CPM-BIOS FUER Z1013 UND 2*MP-RAM-FLOPPY
+;IG-HC 12/88;VERS. 2.40
+;(c) by Rainer Brosig
+;****************************************
+;
+;----------------------------------------
+;
+; GIDE-Erweiterung fuer Z1013, 
+; nach Original GIDE-Quellen
+;
+; Zusammengestellt fuer 64 MB DOM-Modul, 
+; 6 Festplattenlaufwerke mit je 8 MB,
+; H. Poppe, 18.11.2016
+;
+;----------------------------------------
+;
+	.Z80
+;
+AKTLW	EQU	00004h
+SOIL	EQU	00016h		;START OF INPUT LINE
+ARG1	EQU	0001Bh
+ARG2	EQU	0001Dh
+KUZI	EQU	0001Fh
+ARG3	EQU	00023h
+CURSR	EQU	0002Bh
+CCP	EQU	0C000h		;Beginn CCP,  Laenge 0800h
+BDOS	EQU	0C800h		;Beginn BDOS, Laenge 0E00h
+BIOS	EQU	0D600h		;Beginn BIOS
+BWSA	EQU	0E800h		;BWS-Anfang 64x32
+BWSE	EQU	0EFFFh		;BWS-Ende
+BWSL	EQU	00800h		;BWS-Laenge
+MON	EQU	0F000h		;MONITOR-RET
+BEEP	EQU	0FFDCh
+DRAKK	EQU	0FFE8h
+STAT	EQU	0FFF7h
+GADDA	EQU	098h		;ADR. RFL1
+GADDB	EQU	058h		;ADR. RFL2
+CZSP	EQU	1Fh		;CURSOR-ZWISCHEN-SP.
+ZILAD	EQU	25h		;KOPFINHALT LOAD
+SPALT	EQU	64		;BS-SPALTENZAHL
+LCS	EQU	6		;LAENGE CHECKSUMMENBEREICH
+CS	EQU	05Eh		;KONTROLL-CHECKSUMME
+ZL	EQU	SPALT		;ZEILENLAENGE
+BSTAB	EQU	47h
+PIOD	EQU	34h		;ADR.V.24 E/A-MOD.
+PIOC	EQU	35h
+MLZT	EQU	4		;MERKE LETZTES ZEICHEN TAST.
+PUANF	EQU	0F0h		; PUFFERANFANG NAME
+TYPP	EQU	PUANF-4h	; TYPKENNZEICHENZELLE PUFFER
+ARG1P	EQU	PUANF-10h	; ARG1 PUFFER
+ARG2P	EQU	PUANF-0Eh	; ARG2 PUFFER
+ARG3P	EQU	PUANF-0Ch	; STARTADRESSE IM PUFFER
+DATA	EQU	13h		; KOPFADR. DES LETZTEN BLOCKS
+	;	
+;-------------------------------------------------------------
+	;
+BWSIO	equ	040h		; I/O-Port BWS-Karte	
+GIDE	equ	040h		; GIDE Basisadresse
+	;
+	;
+ndisk	equ 8		;maximale Anzahl Laufwerke
+	;
+	; Definition der GIDE I/O Addressen:
+	;
+IdeDOR	equ	GIDE+6		; Digital Output Register
+IdeDat	equ	GIDE+8		; Data Register
+IdeErr	equ	GIDE+9		; Error Register
+IdeWrPc	equ	IdeErr		; Write Precomp Register
+IdeSCnt	equ	GIDE+0Ah	; Sector Count
+IdeSNum	equ	GIDE+0Bh	; Sector Number
+IdeCLo	equ	GIDE+0Ch	; Cylinder Low
+IdeCHi	equ	GIDE+0Dh	; Cylinder High
+IdeSDH	equ	GIDE+0Eh	; Drive and thead
+IdeCmd	equ	GIDE+0Fh	; Command
+IdeStat	equ	GIDE+0Fh	; Status
+	;
+	; Kommandos fuer IDE Laufwerke:
+	;
+CmdRd	equ	20h		; Read Sector
+CmdWr	equ	30h		; Write Sector
+CmdInit	equ	91h		; Initialize Drive Params
+	;
+	;
+	;bdos constants on entry to write (passed in C)
+	;
+wrall	equ	0		;write to allocated
+wrdir	equ	1		;write to directory
+wrual	equ	2		;write to unallocated
+	;
+	;-----------------------------------------------------
+	;
+	;
+	ASEG
+	.phase	BIOS		;BIOS-Anfang
+	;
+	JP	BOOT		;Kaltstart
+WBOTE:	JP	WBOOT		;Warmstart
+	JP	CONST		;Konsolenstatus
+	JP	CONIN		;Konsoleneingabe
+	JP	COOUT		;Konsolenausgabe
+	JP	LIST		;
+	JP	PUNCH		;
+	JP	READR		;
+	JP	HOME		;Spur 0 einstellen
+	JP	SLDSK		;Laufwerk einstellen
+	JP	STRCK		;Spur einstellen
+	JP	SSEC		;Sektor einstellen
+	JP	SDMA		;DMA-Adresse setzen
+	JP	READ		;Sektor lesen
+	JP	WRITE		;Sektor schreiben
+	JP	LSTS	
+	JP	STRAN		;Sektor Translation
+	RET	
+	NOP	
+	NOP	
+	RET	
+	NOP	
+	NOP
+EXDR:	JP	DRAKK		;EXTERNER DRUCKERTREIBER
+MGADA:	DEFB	GADDA		;Adr. RFL A
+MGADB:	DEFB	GADDB		;Adr. RFL B
+EXDT:	DEFB	0		;SCHALTER, EXT. DR.TR. 0=INTERN
+F2_4:	DEFB	0		;SCHALTER TAKT 0=AUTOANPASSUNG		
+	;			;2=2MHz, 4=4MHz;
+;*********************************************************
+	;
+	;TEXT FUER KALTSTART
+	;
+MT1:	DEFB	0Ch,0Dh,0Ah,0Ah	
+	DEFM	' CP/M 2.2 Z1013 IG-HC'
+	DEFB	0Dh,0Ah
+	DEFM	' mit 2*256K RAM-Floppy V. 2.4'
+	DEFB	0Dh,0Ah
+	DEFM	' 6x GIDE auf 04Xh nach T. Reh'
+	DEFB	0Dh,0Ah
+	DEFM	' BWS 32x32/64x32 auf 4Xh'
+	DEFB	0Dh,0Ah
+	DEFM	' BIOS 1.1, H.Poppe, 2016'
+	DEFB	0Dh,0Ah,0Ah
+	DEFM	'RAM-Floppy loeschen? (K)'
+	DEFB	0Dh,0Ah
+	DEFM	'RAM-Floppy laden?    (L) :'
+	DEFB	0
+MT2:	DEFB	0Dh,0Ah
+	DEFM	'A oder B ? :'
+	DEFB	0
+MT3:	DEFB	0Dh,0Ah,0Ah
+	DEFM	'weiter mit CP/M? (N)'
+	DEFB	0
+MT4:	DEFB	0DH,0AH,0AH
+	DEFM	'RAM-Floppy laden? (Y)'
+	DEFB	0
+MT5:	DEFB	0DH,0AH,0AH
+	DEFM	'RAM-Floppy saven? (Y)'
+	DEFB	0
+MT6:	DEFB	0DH,0AH,0AH
+	DEFM	'CCP zerstoert, System HALT'
+	DEFB	0
+	;
+OUTX:	LD	A,(DE)
+	OR	A
+	RET	Z	
+	LD	C,A
+	CALL	COOUT
+	INC	DE
+	JR	OUTX
+	;
+	; KALTSTART
+	;
+BOOT:	LD	SP,80h
+	IN	A,(4)
+	SET	7,A
+	OUT	(4),A		;64*16 - Peters Platine
+	;
+	call	bcls		;BWS 64x32 loeschen und Farbe
+	;			;Gruen auf Schwarz setzen
+	XOR	A
+	LD	(AKTLW),A
+	LD	A,8
+	LD	(TAPUF),A
+	LD	DE,MT1		;Intro-Text
+	CALL	OUTX
+BOO1:	CALL	CONIN
+	CP	0Dh
+	JP	Z,KSTRT	
+	CP	3
+	JP	Z,MON
+	RES	5,A
+	CP	'K'
+	JR	Z,BOO2
+	CP	'L'
+	JR	NZ,BOO1
+BOO2:	LD	(MKOM),A
+	LD	C,A
+	CALL	COOUT
+	LD	DE,MT2
+	CALL	OUTX
+BOO3:	CALL	CONIN
+	RES	5,A
+	LD	C,A
+	CP	3
+	JR	Z,KSTRT
+	SUB	41H
+	JR	C,BOO3
+	CALL	COOUT
+	LD	C,A
+	CALL	SLDSK
+	LD	A,(MKOM)
+	CP	'K'
+	CALL	Z,RFDEL		;RF-DELETE
+	CP	'L'
+	CALL	Z,LDDSK
+KSTRT:	CALL	INIT	
+	LD	A,8	
+	LD	(TAPUF),A
+	XOR	A
+	LD	(TRACK),A
+	LD	(SEC1),A
+	LD	SP,80h
+	JP	GOCPM
+	;
+	; Warmstart
+	;
+WBOOT:	LD	DE,MT3		;Weiter mit CP/M?
+	CALL	OUTX
+	LD	A,8
+	LD	(TAPUF),A	;LOESCHEN ZEICHEN
+WBOO1:	CALL	CONIN
+	RES	5,A		;GROSS
+	CP	'N'
+	JR	Z,SAV1
+	LD	DE,MT4		;RAM-Floppy laden?
+	CALL	OUTX
+	CALL	CONIN
+	RES	5,A
+	CP	'Y'
+	CALL	Z,LDDSK
+	JR	GOCPM		;weiter mit CP/M
+	;
+SAV1:	LD	DE,MT5		;RAM-Floppy saven?
+	CALL	OUTX
+	CALL	CONIN
+	RES	5,A
+	CP	'Y'
+	CALL	Z,SAVED
+	CALL	CHIT
+	IN	A,(4)
+	RES	7,A
+	OUT	(4),A
+	JP	MON		;zum Monitor
+	;
+GOCPM:	ld hl,0000		;0000 in HL
+	ld (unacnt),hl		;clr unalloc cnt, hst buf inactive
+	;
+	LD	HL,CCP
+	XOR	A
+	LD	(CCP+7),A	;PUFFER LOESCHEN
+	LD	B,LCS		;LAENGE CS-BEREICH
+GCPM1:	ADD	A,(HL)
+	INC	HL
+	DJNZ	GCPM1
+	CP	CS
+	JR	Z,GCPM2
+	LD	DE,MT6		;CCP zerstoert
+	CALL	OUTX
+	RST	38H		;KALTSTART
+	;NOP
+GCPM2:	LD	A,8	
+	LD	(TAPUF),A
+	LD	BC,80h
+	CALL	SDMA
+	LD	A,(AKTLW)
+	CP	NDISK
+	JR	C,OK
+	XOR	A
+OK:	LD	C,A
+	JP	CCP
+	;
+;*************************************************************	
+;BIOS-Routinen mit Ergaenzung 
+;der Disk-Routinen fuer GIDE
+;*************************************************************	
+	;
+	;KOPF AUF SPUR NULL SETZEN
+	;
+home:	call	chkhrd		;is it our disk?
+	jr	z,fhome		;no, jump to Floppy
+	xor 	a		;0 in A
+	ld	hl,hstact	; HL points to host active
+	or	(hl)		;set flags
+	ret	z		;return if host is not active
+	inc	hl		;bump to hstwrt
+	xor	a		;0 in A
+	or	(hl)		;set flagz
+	ret	nz		;return if pending write
+	dec	hl		;bump back down to hstact
+	ld	(hl),a		; else clear host active flag
+	ret			;and done
+	;	
+FHOME:	LD	BC,0		;SPURNUMMER=0
+ 	JP	STRCK
+	;	
+	;LAUFWERK AUSWAEHLEN;INP:C=LW-NUMMER
+	;OUT:HL=DPH VEKTOR
+	;
+sldsk:	ld a,c			;LW-Nummer
+	cp ndisk		;Vergleich mit max. LW-Anz.
+	jr nc,errsel		;Fehler, wenn Wert >NDISK
+	call mkesel		;holt Wert aus Disk-Tabelle
+	inc a			;Test auf 0FFh
+	jr z,errsel		;wenn Z=1, keine Disk
+	dec a			;Wert wiederherstellen
+	push af
+	ld a,(aktlw)		;altes LW+User-Nr.
+	and 0F0h		;User-Nr. filtern
+	or c			;neue LW-Nr. dazu
+	ld (aktlw),a		;neues LW merken
+	pop af
+	rlca			;Test auf Bit 7
+	rrca			;in Carry
+	jr c,idesel		;Bit 7 = IDE-Disk
+	;
+	ld c,a			;floppy disk, put back in C
+	xor a			;0 in A
+	ld (hdisk),a		;wenn hdisk=0
+	jp fsdsk		;dann ins BIOS
+	;
+idesel:	ld	(hdisk),a	;flag as our disk
+	ld	h,0		;make sure H=0
+	and	0Fh		;HD-Nummer maskieren
+	ld	l,a		;and put in L
+	ld	a,c		;get disk number again
+	ld	(sekdsk),a	;save disk number
+	add	hl,hl		;*2
+	add	hl,hl		;*4
+	add	hl,hl		;*8
+	add	hl,hl		;*16
+	ld	de,hdpbase	;get base of hard disk dph's
+	add	hl,de		;make pointer to DPH for drive
+	ret			;and go back
+	;
+errsel:	ld	hl,0000		;0 in HL
+	ld	a,(aktlw)	;get current disk
+	sub	c		;same as selected?
+	ret	nz		;wasn't same
+	ld	(aktlw),a	;else force drive A current
+	ret			;and return with error
+	;
+mkesel:	ld	b,0		;0 in B
+	ld	hl,lwtab	;base of select array in HL
+	add	hl,bc		;make pointer to select data
+	ld	a,(hl)		;get the select data
+	ret
+	;
+FSDSK:	LD	HL,0		;FEHLERCODE	
+	PUSH	BC	
+	LD	B,0	
+	LD	A,C		;C=LW-NUMMER	
+	CP	NDISK		;ANZ. LW -1	
+	JR	NC,NVORH
+DISKS:	LD	(AKTLW),A
+	OR	A		;LW A?	
+	JR	NZ,LWB		;NICHT A	
+	LD	A,(MGADA)	
+	LD	HL,DPBA	
+	JR	LWEIN
+LWB:	LD	A,(MGADB)	
+	LD	HL,DPBB
+LWEIN:	LD	(GADDR),A
+NVORH:	POP	BC	
+	RET
+	;
+	;SECTORTRANSFORMATION;INP:BC=LOG.SECTOR
+	;    DE=ADR.TABELLE
+	;
+stran:	call	chkhrd		;is it our disk?
+	jp	z,Fstrn		;not our disk, jump to FBIOS
+	;
+	ld	l,c		;L=C
+	ld	h,b		;H=B (no translation)
+	ret			;and we're done	
+	;
+FSTRN:	LD	B,0
+	LD	A,D
+	OR 	A
+	JR	NZ,STRN1	
+	LD	H,B
+	LD	L,C
+	INC	HL
+	RET
+	;
+STRN1:	EX	DE,HL
+	ADD	HL,BC	
+	LD	A,(HL)		;NEUE NUMMER	
+	LD	(SEC1),A
+	LD	L,A	
+	RET
+	;
+	;SEKTOR EINSTELLEN
+	;INP: C = SEC.NUMMER
+	;OUT: (SEC1) = C
+	;
+ssec:	call	chkhrd		;is it our disk?
+	jp	z,fsec		;not our disk.  Jump to FBIOS
+	;
+	ld	(SEKSEC),bc	;save sector to seek
+	ret
+	;	
+FSEC:	LD	HL,SEC1
+	LD	(HL),C	
+	INC	HL	
+	LD	(HL),0
+	RET
+	;
+	;SPURWAHL
+	;INP:C=SPURNUMMER
+	;OUT:(TRACK)=C
+	;
+strck:	call	chkhrd		;is it our disk?
+	jp	z,fstrk		;no, jump to Fbios
+	;
+	ld	(sektrk),bc	;save it
+	ret			;and done
+	;	
+FSTRK:	LD	HL,TRACK
+	LD	(HL),C
+	INC	HL
+	LD	(HL),0
+	RET
+	;
+	;DMA SETZEN
+	;INP: BC = DMA
+	;
+sdma:	ld	(dmaadr),bc	;set it here
+	;			;and let FBIOS set it as well.
+	LD	(DMA),BC
+	RET
+	;
+	;LESEN EINES SEKTORS ZU 128 BYTE
+	;
+read:	call	chkhrd		;is it our disk?
+	jp	z,fread		;no, jump to Floppy
+	;
+	LD	A,wrual		;treat as write to unallocated
+	LD	(wrtype),A	;store at WRTYPE
+	LD	(READOP),A	;indicate a read (READOP)
+alloc0:	XOR	A		;0 in A
+	LD	(UNACNT),A	;clear unacnt
+alloc1:	INC	A		;bump to 1
+	;
+noovf1:	LD	(RSFLAG),A	;flag a rd(!0) or wr(0) (rsflag)
+;
+; calculate host sector...
+;
+rwoper:	ld	a,(SecShf)	;get sector shift
+	ld	b,a		;into B
+	or	a		;check for 0
+	ld	hl,(SEKSEC)	;get sector
+	jr	z,rwope1	;jrif 0 (don't shift)
+rwope0:	or	a		;clear carry
+	rr	h		;shift sector right H:0->carry
+	rr	l		;shift sector right carry->L:7
+	djnz	rwope0		;until found
+rwope1:	ld	(SEKHST),HL	;store host sector to seek
+	XOR	A		;0 in A
+	LD	(erflag),A	;no errors (yet)
+	LD	HL,HSTACT	;point at hstact
+	OR	(HL)		;OR in the host active flag
+	LD	(HL),1		;always becomes 1
+	JR	Z,filhst	;JRIF was not already 1 (filhst)
+	;
+	LD	HL,SEKHST	;HL points to SEKHST
+	LD	DE,HSTSEC	;DE points HSTSEC
+	LD	BC,5		;length to move/compare in BC
+	call	strcmp		;compare
+	JR	Z,match		;jrif same buffer, disk, track
+;nomatch:
+	LD	A,(HSTWRT)	;match, host written?
+	OR	A		;
+	CALL	NZ,wrhst	;flush pending write
+	;
+filhst:	LD	HL,SEKHST	;point at 
+	LD	DE,HSTSEC	;point to HSTSEC stuff
+	LD	BC,5		;count of data to move
+	LDIR			;set up HSTDSK
+	LD	A,(RSFLAG)	;GET RSFLAG
+	OR	A		;Need to read?
+	CALL	NZ,rdhst	;rdhst
+	XOR	A		;0 in A
+	LD	(HSTWRT),A	;no pending write
+	;
+match:	LD	HL,(SecMsk)	;get mask value in L
+	LD	A,(SEKSEC)	;get SEKSEC
+	AND	L		;mask with L (A has sector offset)
+	LD	BC,00080H	;sector size in BC
+	LD	HL,hdbuf	;buffer base in HL?
+	RRA			;A /= 2 (transfer A:0 to Carry)
+	LD	D,A		;in D  (make high byte of offset)
+	LD	E,B		;0 in E
+	RR	E		;E /= 2	(rotate Carry into E:7)
+	ADD	HL,DE		;make address of CP/M sector in HL
+	LD	DE,(DMAADR)	;get DMA address in DE
+	LD	A,(READOP)	;get READOP
+	OR	A		;is this a READ?
+	JR	NZ,rwmove	;yes, skip
+	EX	DE,HL		;no, swap pointers
+	INC	A		;
+	LD	(HSTWRT),A	;hstwrt = 1
+rwmove:	LDIR			;move data to/from host buffer
+	LD	A,(wrtype)	;get WRTYPE
+	DEC	A		;bump down
+	LD	A,(erflag)	;get erflag?
+	RET	NZ		;return if WRTYPE was wrall or wrual
+	OR	A		;was wrdir, errors?
+	RET	NZ		; return if errors
+	LD	(HSTWRT),A	;no errors, mark buffer written
+	jp 	wrhst		;and go to wrhst sector...
+	;
+FREAD:	CALL	ADRE
+	INIR	
+	XOR	A
+	RET
+	;
+	;SCHREIBEN EINES BLOCKS
+	;
+write:	call	chkhrd		;is it our disk?
+	jp	z,fwrit		;no, jump to Floppy
+	;
+	XOR	A		;0 in A
+	LD	(READOP),A	;indicate a write operation (READOP)
+	LD	A,C		;get the write type in A
+	LD	(wrtype),A	;store at WRTYP
+	CP	wrual		;is it write to unallocated?
+	JR	NZ,chkuna	;no, jump over (to chkuna)
+	;
+	LD	HL,SEKDSK	;point to SEKDSK
+	LD	DE,UNADSK	;set pointer to UNADSK
+	LD	BC,005H		;count of data to move
+	LDIR			;copy SEKDSK --> UNADSK
+	LD	A,(HDBLM)	;get BLM	
+	INC	A		;bump up by 1
+	LD	(UNACNT),A	;set up unacnt
+chkuna:	LD	HL,UNACNT	;point at unacnt
+	XOR	A		;0 in A
+	CP	(HL)		;any more unallocated sectors?
+	JP	Z,alloc1	;JRIF no more (alloc1)
+	DEC	(HL)		;--unacnt
+	LD	HL,SEKDSK	;HL points to SEKDSK
+	LD	DE,UNADSK	;point to unadsk disk data
+	LD	BC,005H		;count of data to move/compare
+	CALL	strcmp		;compare with SEKDSK
+	JP	NZ,alloc0	;JRIF not same disk (alloc0)
+	;
+	LD	HL,(UNASEC)	;get unasec
+	INC	HL		;bump up 1 
+	LD	(UNASEC),HL	;put it back
+	LD	DE,(DPBHD)	;get cp/m sec/trk
+	or	a		;clear carry
+	sbc	hl,de		;check for overflow
+	JR	C,noovf0	;JRIF no overflow 
+	;
+	ld	hl,0000		;overflow, 0 in HL
+	LD	(UNASEC),HL	;reset unasec to 0
+	LD	HL,(UNATRK)	;get UNATRK
+	INC	HL		;bump to next track
+	LD	(UNATRK),HL	;and put it back
+noovf0:	XOR	A		;0 in A
+	JP	noovf1		; and do a write
+	;
+FWRIT:	CALL	ADRE
+	OTIR
+	XOR	A
+	RET
+	;
+	;ADRESSRECHNUNG FUER GEWAEHLTEN SEKTOR (RFL)
+	;
+ADRE:	LD	HL,(TRACK)
+	XOR	A
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	LD	DE,(SEC1)
+	ADD	HL,DE
+	RR	H
+	RR	L
+	RR	A
+	LD	B,A
+	LD	A,(GADDR)
+	ADD	A,7
+	LD	C,A
+	OUT	(C),B
+	DEC	C
+	OUT	(C),L
+	LD	A,H
+	AND	3
+	LD	B,A
+	LD	A,(GADDR)
+	OR	B
+	LD	C,A
+	LD	B,128
+	LD	HL,(DMA)
+	RET	
+	;
+;*************************************************************
+;Function:  wrhst
+;Purpose:   Do physical write to IDE drive
+;Entry:     hstdsk, hsttrk, hstdsk set up
+;Exit:      sector in hdbuf written to disk
+;Used:      all
+;
+wrhst:	call	tfset		;set up Task File
+	ld	a,CmdWr		;get a write command
+	out	(IdeCmd),a	;send it to Task File
+	call	wtrdy		;wait for data
+	otir
+	otir			;write 512 bytes
+	jr	chkerr		;check for/report errors
+	;
+;*************************************************************
+;Function:  rdhst
+;Purpose:   Do physical read of IDE drive
+;Entry:     hstdsk, hsttrk, hstdsk set up
+;Exit:      sector read into hdbuf
+;Used:      all
+;
+rdhst:	call	tfset		;set up Task File
+rdhs1:	ld	a,CmdRd		;get a read command
+	out	(IdeCmd),a	;send to task file
+	call	wtrdy		;wait for data
+	inir
+	inir			;read 512 bytes
+chkerr:	
+	in	a,(IdeStat)	;get status
+	and	1		;check error bit
+	ld	(erflag),a	;save as error flag
+	ret			;return error/no error
+	;
+;*************************************************************
+;Function:  tfset
+;Purpose:   send host parms to IDE Task File registers
+;Entry:     hstdsk, hsttrk, hstsec set up
+;Exit:      Task file registers set up.  HL points to hdbuf,
+;	    BC has count, data port address
+;
+tfset:	in	a,(IdeStat)	;get status
+	rla			;BSY bit to Carry
+	jr	c,tfset		;loop until not BUSY
+	;
+	ld	a,1		;1-sector transfer
+	out	(IdeSCnt),a	;tell IDE drive
+	ld	a,(hstsec)	;get host sector number
+	inc	a		;bump up to 1
+	out	(IdeSNum),a	;send to Task File
+	ld	hl,(hsttrk)	;get host track
+	ld	a,l		;get low order byte
+	out	(IdeCLo),a	;send to Task File
+	ld	a,h		;get high-order byte
+	out	(IdeCHi),a	;send to task file
+	ld	a,(hstdsk)	;get host disk number
+	ld	c,a		;put in c
+	call	mkesel		;get the select data in A
+	out	(IdeSDH),a	;send to drive!
+	;
+	ld	hl,hdbuf	;HL points to host buffer
+	ld	bc,IdeDat	;BC has count, port
+	ret			;and go back
+	;	
+;*************************************************************
+;Function:  chkhrd
+;Purpose:   check if disk operation is for hard disk or floppy
+;Entry:     "ourdisk" is set for hard disk, clear for floppy
+;Exit:      Z set if floppy operation, clear if hard disk
+;Uses:      AF
+;
+chkhrd:	ld	a,(hdisk)	;is it our disk?
+	or	a		;set flagz
+	ret			;and done
+	;
+;*************************************************************
+;Function:  wtrdy
+;Purpose:   Wait until data available or ready for data
+;Entry:     None
+;Exit:      None
+;Uses:      AF
+;
+Wtrdy:	in	a,(IdeCmd)
+	bit	3,a
+	jr	z,wtrdy
+	ret
+	;
+;*************************************************************
+;Function:  strcmp
+;Purpose:   Compare two strings [(SEK|UNA|HST)TRK]
+;Entry:     HL, DE have addresses of strings, BC = length
+;Exit:	    Z set if strings are the same, clear if different
+;		P/V flag clear if entire string checked
+;Uses:	    AF, BC, DE, HL
+;
+strcmp:
+	LD	A,(DE)		;get a byte from (DE)
+	CPI			;compare A-(HL++), BC--
+	RET	NZ		;return if no match
+	RET	PO		;return if string exhausted
+	INC	DE		;else bump to next source byte
+	JR	strcmp		;and repeat comparison
+	;
+;*************************************************************
+	;
+	;ZEICHEN VON TASTATUR <A>
+	;
+CONIN:	CALL	CHIT
+	RST	20H
+	DEFB	1
+	PUSH	AF
+	CALL	CHTI
+	POP	AF
+	RET
+	;
+	;CHANGE AKTLWE/TAPUF
+	;
+CHIT:	LD	A,(AKTLW)
+	LD	(IOBPF),A
+	LD	A,(TAPUF)
+CHRET:	LD	(AKTLW),A
+	RET
+	;
+CHTI:	LD	A,(AKTLW)
+	LD	(TAPUF),A
+	LD	A,(IOBPF)
+	JR	CHRET
+	;
+	;ZEICHEN AUF BILDSCHIRM <C>
+	;
+COOUT:	PUSH	AF
+	PUSH	HL
+	PUSH	BC
+	PUSH	DE
+	CALL	ZAG
+	POP	DE
+	POP	BC
+	POP	HL
+	POP	AF
+	RET
+	;
+ZAG:	LD	A,(MLZBS)	;MERKE LETZTES ZEICHEN
+	CP	1BH
+	JP	Z,ANKXY
+	LD	A,1Bh
+	CP	C
+	JP	Z,MESC
+	LD	A,C
+	OR	A
+	RET	Z
+	CP	88h
+	JR	C,ZAG5
+	AND	7Fh
+ZAG5:	LD	HL,KTAB
+	LD	BC,LKTAB
+	CPIR			;SUCHEN NACH ST.-ZEICHEN
+	JR	NZ,ZAG1
+	DEC	HL
+	LD	BC,KTAB
+	AND	A		;CY=0
+	SBC	HL,BC
+	SLA	L
+	LD	BC,FTAB
+	ADD	HL,BC
+	LD	C,(HL)
+	INC	HL
+	LD	H,(HL)
+	LD	L,C
+	JP	(HL)
+	;
+KTAB:	DB	8		;BACKSTEP
+	DB	9		;CURSOR RECHTS
+	DB	0CH		;CLS
+	DB	16H		;LOESCHEN ZEILENREST
+	DB	18H		;LOESCHEN ZEILE,CURSOR ANF.Z.
+	DB	1AH		;CURSOR NACH OBEN
+	DB	14H		;LOESCHEN BILDSCHIRMREST
+	DB	82H		;KURSOR EIN
+	DB	83H		;KURSOR AUS
+	DB	0DH		;CR
+	DB	0AH		;LF
+	DB	1		;CURSOR LINKS OBEN
+	DB	7		;BEEP
+	DB	15H		;CURSOR RECHTS	
+	DB	84H		;ZEICHEN NORMAL
+	DB	85H		;ZEICHEN INVERS
+	DB	86H		;ZEICHEN INTENSIV
+	DB	87H		;ZEICHEN INTENSIV INVERS
+LKTAB	EQU	18		;Laenge der Tabelle
+	;
+FTAB:	DEFW	BSTP
+	DEFW	CURR
+	DEFW	CLS
+	DEFW	DELLN
+	DEFW	INSLN
+	DEFW	ZRET
+	DEFW	CLCU
+	DEFW	CZSET
+	DEFW	PUABL
+	DEFW	CR
+	DEFW	OUTLF
+	DEFW	CHOME
+	DEFW	BEEPA
+	DEFW	CURR
+	DEFW	NORM
+	DEFW	INV
+	DEFW	ND
+	DEFW	ND
+	;
+	;AUSGABE ZEICHEN <> STEUERZEICHEN
+	;
+ZAG1:	AND	7Fh
+	LD	HL,(CURSR)
+	PUSH	AF
+	LD	A,(MINV)
+	LD	B,A
+	POP	AF
+	OR	B		;INVERS, WENN 80H
+	LD	(HL),A
+	INC	HL
+	EX	DE,HL
+	LD	HL,BWSE+1
+	XOR	A
+	SBC	HL,DE
+	EX	DE,HL	
+	JR	NZ,ZAG2
+ZAG3:	LD	DE,BWSA
+	LD	HL,BWSA+SPALT
+	LD	BC,BWSE-BWSA+1-SPALT
+	LDIR
+	PUSH	DE
+	POP	HL
+	PUSH	HL
+	INC	DE
+	LD	(HL),' '
+	LD	BC,SPALT-1
+	LDIR
+	LD	HL,(SOIL)
+	LD	DE,SPALT
+	XOR	A
+	SBC	HL,DE
+	LD	(SOIL),HL
+	POP	HL
+ZAG2:	LD	A,(HL)
+	LD	(CZSP),A
+	LD	(HL),0FFH
+	LD	(CURSR),HL
+ND:	RET
+	;
+	;BACKSTEP
+BSTP:	CALL	PUABL
+	DEC	HL
+	JR	ZAG2
+	;
+	;CURSOR RECHTS
+CURR:	CALL	PUABL
+	INC	HL
+	LD	DE,BWSE
+	EX	DE,HL
+	OR	A
+	SBC	HL,DE
+	EX	DE,HL
+	LD	A,' '
+	JP	C,ZAG1
+	JR	ZAG2
+	;
+	;BS Loeschen und Farbe setzen
+BCLS:	ld	c,bwsio+2
+	ld	a,01h		;Farb-RAM ein
+	out	(c),a
+	ld	b,02h		;Farbe gruen auf schwarz
+	call	BCL1
+	ld	a,00h		;Farb-RAM aus
+	out	(c),a
+	ld	b,20h		;Leerzeichen
+	call	BCL1
+	ld	c,bwsio+1	;
+	ld	a,00h		;64 Zeichen
+	out	(c),a		;
+	ret			;
+	;
+BCL1:	ld	hl,BWSA
+	ld	de,BWSL
+BCL2:	ld	(hl),b
+	inc	hl
+	dec	de
+	ld	a,d
+	or	e
+	jr	nz,BCL2
+	ret
+	;
+	;BS-LOESCHEN
+CLS:	LD	HL,BWSA
+	LD	(HL),' '
+ 	LD	BC,BWSE-BWSA
+	LD	DE,BWSA+1
+	LDIR
+	LD	A,' '
+	LD	(CZSP),A
+	JP	CHOME
+	;
+	;WAGENRUECKLAUF
+CR:	LD	HL,(CURSR)
+	LD	A,SPALT-1
+	CPL
+	AND	L
+	LD	L,A
+	JP	SETCU
+	;
+	;BEEP-AUSGABE
+BEEPA:	LD	BC,0A040h	;BEEP ARG.
+	CALL	BEEP
+	RET
+	;
+	;LINE-FEED
+OUTLF:	LD	DE,BWSE
+	LD	HL,(CURSR)
+	LD	BC,SPALT
+	ADD	HL,BC
+	EX	DE,HL
+	SBC	HL,DE		;ENDE-NEUE
+	EX	DE,HL
+	JP	NC,SETCU
+	CALL	PUABL		;PUFFER AUFBLENDEN
+	CALL	ZAG3
+	RET
+	;
+	;CURSOR-HOME
+CHOME:	LD	DE,BWSA
+	LD	HL,(CURSR)
+	OR	A
+	SBC	HL,DE
+	RET	Z
+	EX	DE,HL
+	JP	SETCU
+	;
+	;LOESCHEN BS AB CURSOR
+CLCU:	LD	BC,(CURSR)
+	LD	HL,BWSE
+	SBC	HL,BC		;HL:=ANZ.ZEICH.BIS BWS-ENDE
+MDFAA:	LD	DE,1
+	LD	A,' '
+	LD	BC,(CURSR)
+MDFB3:	LD	(BC),A
+	INC	BC
+	SBC	HL,DE
+	JP	NZ,MDFB3
+MDFBA:	LD	HL,(CURSR)
+	LD	(HL),0FFH		;CURSOR	RET
+	;
+	;LOESCHEN ZEILE
+DELLN:	LD	HL,(CURSR)
+	LD	A,L
+	AND	SPALT-1		;A=SPALTENPOS.
+	LD	B,A
+	LD	A,SPALT-1
+	SUB	B
+	RET	Z
+	LD	B,A		;ANZ.BIS ENDE ZEILE
+	LD	A,' '
+	LD	(CZSP),A
+DELL1:	INC	HL
+	LD	(HL),' '
+	DJNZ	DELL1
+	RET
+	;
+	;INSERT IN ZEILE
+INSLN:	CALL	CR
+	LD	A,(CZSP)
+	LD	(HL),A
+	LD	D,H
+	LD	E,L
+	INC	DE
+	LD	BC,SPALT-1
+	LDIR
+	LD	HL,(CURSR)
+	LD	(HL),0FFH
+	LD	A,' '
+	LD	(CZSP),A
+	RET
+	;
+ZRET:	LD	B,SPALT
+ZR1:	PUSH	BC
+	CALL	BSTP
+	POP	BC
+	DJNZ	ZR1
+	RET
+	;
+CZSET:	LD	A,0FFH
+CZS1:	LD	HL,(CURSR)
+	LD	(HL),A
+	RET
+	;
+PUABL:	LD	A,(CZSP)
+	JR	CZS1
+	;
+	;
+INV:	LD	A,80H
+INV1:	LD	(MINV),A
+	RET
+	;
+NORM:	XOR	A
+	JR	INV1
+	;
+	;MERKE ESCAPE-ANKUENDIGUNG
+MESC:	LD	A,C
+	LD	(MLZBS),A
+	RET
+	;
+	;CURSOR-DIREKT-POSITIONIERUNG A
+ANKXY:	LD	A,(MSEQU)
+	CP	0FFh
+	JP	Z,SETXY
+	LD	A,0FFh
+	LD	(MSEQU),A
+	LD	A,C
+	AND	5Fh
+	LD	(MZEIP),A
+	RET
+	;
+SETXY:	LD	A,C
+	CP	3Dh		;ADM3A-TERMINAL
+	RET	Z
+	CP	59h
+	RET	Z
+	AND	7Fh
+	LD	(MSPAP),A
+	LD	C,A
+	XOR	A
+	LD	(MLZBS),A
+	LD	(MSEQU),A
+	LD	HL,BWSA
+	LD	B,0
+	ADD	HL,BC
+	LD	A,(MZEIP)
+	OR	A		;ZEILE 0?
+	JP	Z,SETCU
+	LD	C,0
+	LD	B,A
+	LD	D,0
+	LD	E,SPALT		;SPALTENZAHL
+ZINC:	ADD	HL,DE
+	DJNZ	ZINC
+SETCU:	PUSH	HL
+	LD	DE,BWSE
+	SCF
+	SBC	HL,DE
+	POP	HL
+	JR	C,SETC1
+	EX	DE,HL
+SETC1:	LD	DE,(CURSR)
+	LD	A,(CZSP)
+	LD	(DE),A
+	LD	A,(HL)		;VERDECKTES ZEICHEN
+	LD	(CZSP),A
+	LD	(HL),0FFh	;NEUER CURSOR
+	LD	(CURSR),HL
+	RET
+	;
+	;AUSGABE NEUE ZEILE
+NL:	PUSH	BC
+	PUSH	AF
+	LD	C,0Dh
+	CALL	COOUT
+	LD	C,0Ah
+	CALL	COOUT
+	POP	AF
+	POP	BC
+	RET
+	;
+	;INIT FUER KALTSTART
+	;
+INIT:	LD	A,0C3H
+	LD	(0),A
+	LD	(5),A	
+	LD	(CCP-3),A
+	LD	HL,WBOTE
+	LD	(1),HL
+	LD	HL,CCP-3
+CHTP:	LD	(6),HL
+	LD	HL,BDOS
+	LD	(CCP-2),HL
+	LD	A,(AKTLW)
+	LD	(TAPUF),A
+	LD	A,0CFH
+	OUT	(PIOC),A
+	LD	A,0FEH
+	OUT	(PIOC),A
+	LD	A,0FFH
+	OUT	(PIOD),A	;ANFANGSINIT
+	XOR	A
+	LD	(AKTLW),A
+	RET
+	;
+	;TASTATURSTATUS
+	;
+CONST:	CALL	CONS1
+	OR	A
+	RET	Z
+	LD	A,0FFH	
+	RET
+	;
+	;EIN ZEICHEN VON TASTATUR (INKEY)
+	;
+CONS1:	CALL	CHIT
+	PUSH	HL
+	PUSH	DE
+	PUSH	BC
+	RST	20H
+	DEFB	4
+	POP	BC
+	POP	DE
+	POP	HL
+	PUSH	AF
+	XOR	A
+	LD	(TAPUF),A
+	LD	A,(IOBPF)
+	LD	(AKTLW),A
+	POP	AF
+	RET
+	;
+	;DRUCKEREINBINDUNG V.24-MODUL RIESA
+	;
+LIST:	LD	A,(EXDT)
+	OR	A
+	LD	A,C
+	JP	NZ,EXDR		;EXTERNER TREIBER
+ZDR1:	PUSH	HL
+	PUSH	BC
+	LD	L,A
+	LD	A,0CFH
+	OUT	(PIOC),A
+	LD	A,0FEH
+	OUT	(PIOC),A
+PRNT1:	PUSH	HL
+	XOR	A
+	LD	(TAPUF),A	;BLINDE BREAK-ABFRAGE
+	CALL	CONS1
+	CP	1BH		;ESCAPE
+	SCF	
+	POP	HL
+	JR	Z,PRE
+	IN	A,(PIOD)	;DRUCKERSTATUS LESEN
+	AND	8		;A3=CTS
+	JR	NZ,PRNT1
+	LD	B,10		;10 BITS
+	LD	H,0FFH		;STOP-BITS
+	SLA	L		;STARTBIT EINSCHIEBEN
+	RL	H
+	DI
+	PUSH	DE
+	LD	A,(F2_4)
+	CP	4		;4MHz
+	JR	Z,F4
+	CP	2		;2MHz
+	JR	Z,F2
+	IN	A,(4)
+	BIT	6,A
+F2:	LD	D,10		;ZK 2MHz
+	JR	Z,SEND
+F4:	LD	D,23		;ZK 4MHz
+SEND:	LD	A,L
+	OUT	(PIOD),A
+	SRL	H
+	RR	L
+	LD	C,D		;ZK
+TIME:	DEC	C
+	JR	NZ,TIME
+	DJNZ	SEND
+	EI
+	OR	A		;CY=0
+	POP	DE
+PRE:	POP	BC
+	POP	HL
+	RET
+	;
+	;DRUCKERSTATUS V.24-MODUL RIESA
+LSTS:	LD	A,(EXDT)
+	OR	A
+	LD	A,0FFH
+	RET	NZ		;EXTERNER TREIBER
+	IN	A,(PIOD)	;DRUCKERSTATUS
+	AND	8		;CTS-SIGNAL
+	LD	A,0FFH
+	RET	Z		;BEREIT
+	XOR	A	
+	RET
+	;
+PUNCH:	RET
+	NOP
+	NOP
+	;
+READR:	RET
+	NOP
+	NOP
+	;
+	;LOESCHEN RAM-FLOPPY
+	;
+RFDEL:	LD	A,(GADDR)
+	LD	E,A
+	ADD	A,6
+	LD	C,A
+	LD	H,C		;IO-ADR.LATCH
+	XOR	A	
+	LD	D,A		;BLOCKZAEHLER/SEITE
+DEL3:	OUT	(C),D		;RESET LATCH
+	INC	C	
+	LD	L,C		;IO-ADR-ZAEHLER
+	XOR	A
+	OUT	(C),A		;RESET ZAEHLER
+	LD	C,E
+	LD	B,0
+	LD	A,0E5H
+DEL2:	OUT	(C),A
+	DJNZ	DEL2
+	INC	D
+	LD	C,H
+	JR	NZ,DEL3
+	INC	E
+	LD	A,(GADDR)
+	ADD	A,4
+	CP	E
+	JR	NC,DEL3
+	RET
+	;
+	;SAVE DISK 256K
+	;
+SAVED:	CALL	CLS
+	CALL	NL
+	CALL	NL
+	CALL	NL
+	LD	HL,0
+	LD	(ARG1),HL
+	LD	(ARG2),HL
+	LD	(ARG3),HL
+	CALL	KAUFB		;AUFBEREITUNG KOPFPUFFER
+	RET	C
+	LD	HL,0E0H
+	LD	IX,0
+	LD	DE,5000		;ANZ.SYNC-BITS
+	CALL	BSMK
+	LD	BC,BWSA
+	CALL	SDMA		;PUFFERANFANG
+	LD	IX,0
+	LD	DE,0
+RDDSK:	LD	C,E
+	CALL	SSEC		;1.SECTOR=0
+	LD	C,D
+	CALL	STRCK		;1.TRACK=0
+	EXX
+	CALL	READ
+	LD	HL,BWSA
+	LD	B,4
+	LD	DE,40
+RDDS1:	PUSH	BC
+	PUSH	IX
+	CALL	BSMK
+	POP	IX
+	POP	BC
+	LD	DE,1
+	ADD	IX,DE
+	LD	DE,14
+	DJNZ	RDDS1
+	EXX
+	CALL	CONS1
+	CP	3
+	JR	Z,SAVEE
+	INC	E		;SEC+1
+	LD	A,E
+	CP	16		;16 SECTORS
+	JR	C,RDDSK
+	LD	E,0
+	INC	D
+	LD	A,D
+	RST	20H
+	DEFB	6
+	RST	20H
+	DEFB	14
+	RST	20H
+	DEFB	14
+	LD	A,D
+	CP	128		;128 TRACKS
+	JR	C,RDDSK
+SAVEE:	LD	DE,40		;SYNC-BITS
+	LD	IX,0FFFFH
+	LD	HL,BWSA
+	CALL	BSMK
+	RET
+	;
+	;LOAD DISK
+	;
+LDDSK:	CALL	CLS
+	CALL	NL
+	CALL	NL
+	CALL	NL
+	LD	HL,0EFFFH
+	LD	(ARG2),HL
+LDDS1:	CALL	SUCHK
+	RET	C
+	LD	A,(0ECH)
+	CP	'D'
+	JR	NZ,LDDS1
+	LD	HL,0F0H
+	LD	B,16
+LDDS2:	LD	C,(HL)
+	CALL	COOUT	
+	INC	HL
+	DJNZ	LDDS2
+	CALL	NL
+	CALL	NL
+	LD	HL,0
+	LD	(ZILAD),HL
+	LD	DE,0
+LDDS4:	LD	B,4
+	LD	HL,BWSA
+LDDS3:	PUSH	DE
+	PUSH	BC
+	CALL	BLMK
+	POP	BC
+	POP	DE
+	RET	C
+	DJNZ	LDDS3
+	LD	C,E
+	CALL	SSEC
+	LD	C,D
+	CALL	STRCK
+	LD	BC,BWSA
+	CALL	SDMA
+	PUSH	DE
+	CALL	WRITE
+	POP	DE
+	CALL	CONS1
+	CP	3
+	RET	Z
+	INC	E
+	LD	A,E
+	CP	16		;16 SECTOREN
+	JR	NZ,LDDS4
+	INC	D
+	LD	E,0
+	LD	A,D
+	RST	20H
+	DEFB	6	
+	RST	20H
+	DEFB	14
+	RST	20H
+	DEFB	14
+	LD	A,D
+	CP	128	
+	JR	C,LDDS4
+LOADE:	RET
+	;
+	; UP - KOPFAUFBEREITUNG IM PUFFER
+	;
+KAUFB:	CALL	L1
+	EX	DE,HL
+	LDIR			;FUELLEN PUFFER ARG1 U. 2
+	LD	HL,(ARG3)
+	LD	(ARG3P),HL	;ARG3
+	LD	HL,PUANF-3H
+	LD	A,0D3H		;KOPFKENNZEICHEN -> PUFFER
+	LD	B,3
+KOKZ:	LD	M,A
+	INC	HL
+	DJNZ	KOKZ		;3*D3H=KZ-NAMEN
+	CALL	L3		;EING.TYP U.NAME
+	LD	A,'D'
+	LD	(TYPP),A
+	LD	HL,(SOIL)
+	LD	BC,10H
+	LD	DE,PUANF
+	LDIR			;LADEN PUFFER MIT NAME
+	CALL	NL
+	RET
+	;
+	;SUCHEN NACH KOPFBLOCK
+	;
+SUCHK:	CALL	CONS1		;BREAK?
+	CP	3		;^C
+	JR	NZ,KBRAK
+	CALL	NL
+	SCF
+	RET
+	;
+KBRAK:	LD	A,15+PUANF
+ 	LD	(ARG2),A
+	LD	HL,PUANF-10H
+	CALL	BL		;LADEN KOPFBLOCK
+	JR	NZ,SUCHK
+	LD	B,3
+	LD	HL,PUANF-3
+KOKO:	LD	A,M
+	CP	0D3H		;KONTROLLE KOPFBLOCK
+	INC	HL
+	JR	NZ,SUCHK
+	DJNZ	KOKO
+	RET
+	;
+	; UP - LESEN EINES BLOCKS MIT KONTROLLE
+	; INPUT: (ZILAD) - ZU LESENDER BLOCK
+	; HL    - DMA
+	; OUTPUT: (ZILAD)- NAECHSTER ZU LESENDE BLOCK
+	; CY=1 WENN BREAK ODER ENDEBLOCK
+	;
+BLMK:	CALL	BL
+	JR Z,	DLM3
+	;
+	;BLOCKSUCHEN
+	;
+BADR:	LD	BC,39H		;TONKENNWERT
+	CALL	BEEP
+	CALL	BADRC
+SUCHB:	CALL	CONS1
+	CP	3
+	SCF			;ABBRUCH-KZ
+	RET	Z
+	LD	BC,20H
+	AND	A
+	SBC	HL,BC
+WIED:	CALL	BL
+	JR	NZ,SUCHB
+DLM3:	LD	A,D
+	AND	E
+	INC	A		;ENDEBLOCK?
+	SCF
+	RET	Z
+	PUSH	HL
+	LD	HL,(ZILAD)
+	EX	DE,HL
+	AND	A
+	SBC	HL,DE
+	POP	HL
+	JR	Z,DLM1		;WAR GESUCHTER BLOCK
+	JR	NC,BADR		;GELESENER BLOCK ZU GROSS
+	CALL	BLZKL		;ZU KLEIN
+	JR	SUCHB
+DLM1:	INC	DE
+	LD	(ZILAD),DE
+	OR	A		;CY=0
+	RET
+	;
+	;ARGUMENTE LADEN
+	;
+L1:	LD	HL,ARG1P
+	LD	DE,ARG1
+	LD	BC,4
+	RET
+	;
+	; TYP + NAME LADEN
+	;
+L3:	RST	20H
+	DB	2H,' filename',0BAH
+	LD	HL,(CURSR)
+	LD	(SOIL),HL
+	LD	C,0FFH
+ZKINP:	INC	C
+	CALL	CONIN
+	CP	3
+	SCF
+	RET	Z
+	CP	8
+	JR	NZ,OUTCH
+	DEC	C
+	JP	M,ZKINP
+ENDE:	DEC	C
+OUTCH:	CP	0DH
+	RST	20H
+	DB	0
+	LD	A,C
+	LD	(DATA+2),A
+	SCF
+	CCF
+	RET	Z
+  	LD	A,10H		;16 ZEICHEN
+	CP	C
+	LD	A,8
+	JR	NZ,ZKINP
+	JR	ENDE
+	;
+	; FEHLERMELDUNGEN KASSETTENINTERFACE
+	;
+BLZKL:	PUSH	HL
+	RST	20H
+	DEFB	2,'>>',0A0H
+	JR	BADR1
+BADRC:	PUSH	HL
+	RST	20H
+	DEFB	2,'<<',0A0H
+BADR1:	LD	HL,(CURSR)
+	LD	(HL),' '
+	DEC	HL
+	DEC	HL
+	DEC	HL
+	LD	(CURSR),HL
+	POP	HL
+	RET
+	;
+	; UP-SCHREIBEN EINES BLOCKS MIT BLOCKADRESSE
+	;
+BSMK:	LD	B,112 		;VORBLOCK
+BSX1:	DJNZ	BSX1
+	CALL	FLOUT
+	DEC	DE
+	LD	A,E
+	OR	D
+	JR	NZ,BSMK
+	LD	C,2
+BSMO:	LD	B,53
+BSX5:	DJNZ	BSX5
+	CALL	FLOUT
+	DEC	C
+	JR	NZ,BSMO
+	PUSH	IX		;IX=KOPFINHALT
+	POP	DE
+	LD	B,18		;BSNO AUSGABE KENNZEICHEN
+BSXO:	DJNZ	BSXO
+	CALL	WS		;SCHREIBEN EINES DOPPELBYTES
+	LD	B,15
+BSW1:	DJNZ	BSW1
+	LD	C,16		;DATEN 16x16=32x8
+BSM1:	LD	E,M
+	INC	HL
+	LD	D,M
+	ADD	IX,DE		;AUFADDIEREN CHECKSUMME
+	INC	HL
+	PUSH	BC
+	CALL	WS
+	POP	BC
+	DEC	C
+	JR	Z,BSM2
+	LD	B,14
+BSX2:	DJNZ	BSX2
+	JR	BSM1
+BSM2:	PUSH	IX		;ENDE DATEN
+	POP	DE		;AUSGABE CHECKSUMME
+	LD	B,16
+BSX3:	DJNZ	BSX3
+	CALL	WS
+	RET
+	;
+	; UP - AUSGABE EINES WORTES - 16 BIT AUS DE
+	;
+WS:	LD	C,16
+WSMO:	SRL	D
+	RR	E
+	JR	NC,WSM1
+	LD	B,3		;WSN1...
+BSWS1:	DJNZ	BSWS1
+	NOP
+	JR	WSM3
+WSM1:	CALL	FLOUT
+WSM3:	LD	B,25		;WSN2...
+BSWS2:	DJNZ	BSWS2
+WSM2:	CALL	FLOUT	
+	DEC	C
+	RET	Z
+  	LD	B,21		;WSN3...
+BSWS3:	DJNZ	BSWS3
+	JR	WSMO
+	;
+	; UP - FLANKENAUSGABE BIT 7 PORT B
+	;
+FLOUT:	IN	A,(2)
+	XOR	80H
+	OUT	(2),A
+	RET
+	;
+	; UP ZUR EINGABE EINES DATENBLOCKS
+	;INPUT:HL=AADR.
+	;OUTPUT:HL=AADR.NAECHSTER BLOCK
+	;	DE=(DATA)=KOPFADRESSE
+	;       Z=1 --> BLOCK FEHLERFREI
+	;
+BL:	CALL	BITIN
+	CALL	FIFLA
+	LD	C,7
+BLM1:	LD	DE,910h		;BLN9...BLN11
+	LD	A,7
+SW1:	DEC	A
+	JR	NZ,SW1
+	CALL	BITIN
+BLMX:	CALL	BITIN	
+	JR	NZ,BL		;VERAENDERUNG ERKANNT?
+	DEC	D
+	JR	NZ,BLMX
+	DEC	C
+	JR	Z,BLM4		;SYNC.-FELD ERKANNT?
+BLM2:	IN	A,(2)
+	XOR	B
+	BIT	6,A
+	JR	NZ,BLM1		;FLANKE ERKANNT?
+	DEC	E
+	JR	NZ,BLM2		;WARTESCHLEIFE
+	JR	BL		;TIME OUT
+	;
+	;7 NULLEN ERKANNT
+	;
+BLM4:	CALL	FIFLA
+	LD	A,68
+SW3:	DEC	A
+	JR	NZ,SW3
+	CALL	BITIN
+	JR	NZ,BLM4		;AUF 1 WARTEN
+	CALL	FIFLA
+	LD	A,30		;BLN4...
+SW4:	DEC	A
+	JR	NZ,SW4
+	CALL	WL
+	LD	(DATA),DE
+	PUSH	DE
+	POP	IX		;CS-ANFANGSWERT
+	LD	A,26		;BLN 10...
+	LD	C,16
+SW10:	DEC	A
+	JR	NZ,SW10
+BLM5:	CALL	WL
+	ADD	IX,DE
+	EX	(SP),IX		;VERZOEGERUNG
+	EX	(SP),IX
+	LD	M,E
+	INC	HL
+	LD	M,D
+BLM7:	INC	HL
+	DEC	C
+	JR	Z,BLM8
+	LD	A,18		;BLN6...
+SW6:	DEC	A
+	JR	NZ,SW6
+	JR	BLM5
+BLM8:	LD	A,18		;BLN7
+SW7:	DEC	A
+	JR	NZ,SW7
+	CALL	WL		;PRUEFSUMME LESEN
+	EX	DE,HL
+	PUSH	IX
+	POP	BC
+	SBC	HL,BC
+	LD	HL,(DATA)
+	EX	DE,HL
+	RET
+	;
+	; UP - EINLESEN EINES WORTES
+	;
+WL:	PUSH	HL
+	LD	L,16
+WLMO:	CALL	BITIN
+	JR	NZ,WLM1
+	XOR	A
+	JR	WLM2
+WLM1:	SCF
+WLM2:	RR	D
+	RR	E
+	CALL	FIFLA
+	DEC	L
+	JR	Z,WLM3
+	LD	A,30		;WLN1...
+SWLN1:	DEC	A
+	JR	NZ,SWLN1
+	JR	WLMO
+WLM3:	POP	HL
+	RET
+	;
+	; UP - EINGABE EINES BIT
+	;
+BITIN:	IN	A,(2)
+	XOR	B
+	BIT	6,A
+	PUSH	AF
+	XOR	B
+	LD	B,A
+	POP	AF
+	RET
+	;
+	; UP - FINDEN EINER FLANKE
+	;
+FIFLA:	IN	A,(2)
+	XOR	B
+	BIT	6,A
+	JR Z,	FIFLA
+	RET
+	;
+AUTOR:	DEFB	'(c) by R. Brosig  2/89'
+MLZBS:	DEFB	0		;MERKE LETZTES ZEICH.-BS
+MSEQU:	DEFB	0		;MERKE SEQUENZ
+MZEIP:	DEFB	0		;MERKE ZEILENPOSITION
+MSPAP:	DEFB	0		;MERKE SPALTENPOSITION
+;
+;*************************************************************
+;
+;lwtab -- array of select values for mapping the disk number
+;	passed to SELDSK to either the floppy-disk bios or the
+;	hard disk bios--selecting which disk to use.
+;
+;	00-0F = Disk im BIOS installiert
+;	A0-AF = Master IDE drive
+;	B0-BF = Slave IDE drive
+;	FF    = Laufwerk nicht installiert
+;
+lwtab:	defb	0		;A: = erste Floppy
+	defb	1		;B: = zweite Floppy
+	defb	0A0h		;C: = erste  IDE Disk (Kopf 0)
+	defb	0A1h		;D: = zweite IDE Disk (Kopf 1)
+	defb	0A2h		;E: = dritte IDE DIsk (Kopf 2)
+	defb	0A3h		;F: = vierte IDE Disk (Kopf 3)
+	defb	0A4h		;G: ...
+	defb	0A5h		;H:
+	defb	0ffh		;I: = kein Laufwerk
+	defb	0ffh		;J:
+	defb	0ffh		;K:
+	defb	0ffh		;L:
+	defb	0ffh		;M: ...
+	defb	0ffh		;N:
+	defb	0ffh		;O:
+	defb	0ffh		;P:
+;
+hdisk:	defs	1	;flag if disk operation is for us.
+;
+; DO NOT CHANGE THE ORDER OF THESE DATA AREAS!!!
+;
+hstsec:	defs	2		;host sector
+hstdsk:	defs	1		;host disk
+hsttrk:	defs	2		;host track
+sekhst:	defs	2		;host sector to seek
+sekdsk:	defs	1		;disk to seek
+sektrk:	defs	2		;track to seek
+seksec:	defs	2		;sector to seek
+unadsk:	defs	1		;unallocated disk
+unatrk:	defs	2		;unallocated track
+unasec:	defs	2		;unallocated sector
+unacnt:	defs	1		;unallocated sector count
+hstact:	defs	1		;host active flag
+hstwrt:	defs	1		;host written flag
+erflag:	defs	1		;error reporting flag
+rsflag:	defs	1		;read sector flag
+readop:	defb	0
+wrtype:	defb	0
+dmaadr:	defw	0
+	;
+DPBA:	DEFW	0		;NO TRANSLATION TABLE
+	DEFW	0		;6-BYTE ARBEITSZELLEN
+	DEFW	0		;FUER BDOS
+	DEFW	0
+	DEFW	DIRBF		;128 BYTE PUFFER
+	DEFW	DPB		;DISK-PARAMETERBLOCK
+	DEFW	CSV		;CHECKSUMMENBEREICH
+	DEFW	ALVA		;BLOCKBELEGUNGSPLAN
+	;
+DPBB:	DEFW	0
+	DEFW	0
+	DEFW	0
+	DEFW	0
+	DEFW	DIRBF
+	DEFW	DPB
+	DEFW	CSV
+	DEFW	ALVB
+	;
+DPB:	DEFW	16		;SEKTOREN/SPUR
+	DEFB	3		;BLOCKSHIFTFAKTOR
+	DEFB	7		;BLOCKMASKE
+	DEFB	0		;EXTEND-MASKE
+	DEFW	255		;256K KAP.
+	DEFW	63		;MAX.ANZ.DIR.EINTR.-1
+	DEFW	0C0H		;DIRECTORY-BLOECKE
+	DEFW	0		;KEIN DISK CHECK
+	DEFW	0		;KEINE SYSTEMSPUREN
+	;
+;-------------------------------------------------------------
+; DPH und DPB GIDE
+;-------------------------------------------------------------
+	;
+	;DPH fuer IDE-Laufwerke
+	;
+HDPBASE:
+HDPH0:	defw	0000		;XLT0
+	defw	0000
+	defw	0000, 0000	;scratch
+	defw	DIRBF
+	defw	DPBHD0
+	defw	CSV0
+	defw	ALV0
+	;
+HDPH1:	defw	0000		;XLT1
+	defw	0000
+	defw	0000, 0000	;scratch
+	defw	DIRBF
+	defw	DPBHD
+	defw	CSV1
+	defw	ALV1
+	;
+HDPH2:	defw	0000		;XLT2
+	defw	0000
+	defw	0000, 0000	;scratch
+	defw	DIRBF
+	defw	DPBHD
+	defw	CSV2
+	defw	ALV2
+	;
+HDPH3:	defw	0000		;XLT3
+	defw	0000
+	defw	0000, 0000	;scratch
+	defw	DIRBF
+	defw	DPBHD
+	defw	CSV3
+	defw	ALV3
+	;
+HDPH4:	defw	0000		;XLT4
+	defw	0000
+	defw	0000, 0000	;scratch
+	defw	DIRBF
+	defw	DPBHD
+	defw	CSV4
+	defw	ALV4
+	;
+HDPH5:	defw	0000		;XLT5
+	defw	0000
+	defw	0000, 0000	;scratch
+	defw	DIRBF
+	defw	DPBHD
+	defw	CSV5
+	defw	ALV5
+	;
+	;Host Parameters for 64MB IDE drive...
+	;
+SecMsk:	defb	3		;512/128 - 1
+Secshf:	defb	2		;log_2(512/128)
+	;
+	;Disk Parameter Block fuer 8MB Laufwerke mit 8 kB Bloecken
+	;Erster DPB fuer erstes LW mit 2 Systemspuren
+	;
+DPBHD0:	defw	128	;SPT 2	;32x4 CP/M Sectors/track (128 Byte)
+	defb	6	;BSH 1	;Block Shift Factor (Anz. 128 Byte je Block, 2_log)
+	defb	63	;BLM 1	;Block Mask
+	defb	3	;EXM 1	;Extent Mask
+	defw	3E3h	;DSM 2	;996 blocks
+	defw	3FFh	;DRM 2	;1024 directory entries
+	defw	0FFh	;ALL 2	;8 blocks of directory !!!
+	defw	0	;CKS 2	;Check Area Size (0 for HDD)
+	defw	2	;OFF 2	;2 tracks offset (2 Systemspuren)
+	;
+	;Zweiter DPB fuer weitere LW ohne Systemspuren
+	;
+DPBHD:	defw	128	;SPT 2	;32x4 CP/M Sectors/track (128 Byte)
+	defb	6	;BSH 1	;Block Shift Factor (Anz. 128 Byte je Block, 2_log)
+HDBLM:	defb	63	;BLM 1	;Block Mask
+	defb	3	;EXM 1	;Extent Mask
+	defw	3E7h	;DSM 2	;1000 blocks	(500 Zylinder/Sektoren)
+	defw	3FFh	;DRM 2	;1024 directory entries
+	defw	0FFh	;ALL 2	;8 blocks of directory !!!
+	defw	0	;CKS 2	;Check Area Size (0 for HDD)
+	defw	0	;OFF 2	;2 tracks offset
+	;
+	defm 'CSV und ALV 0-7'
+	;
+CSV0:	defb 	0
+ALV0:	defs	128
+	;
+CSV1:	defb 	0
+ALV1:	defs	128
+	;
+CSV2:	defb 	0
+ALV2:	defs	128
+	;
+CSV3:	defb 	0
+ALV3:	defs	128
+	;
+CSV4:	defb 	0
+ALV4:	defs	128
+	;
+CSV5:	defb 	0
+ALV5:	defs	128
+	;
+LAST:	defb 	0	
+	;
+TRACK:	DEFW	0
+	;
+SEC1:	DEFW	0
+IOBPF:	DEFW	0		;PUFFER IO-BYTE
+TAPUF:	DEFW	0
+MINV:	DEFB	0		;MERKE INVERS
+GADDR:	DEFB	98H		;AKTUELLE GRUNDADRESSE
+MKOM:	DEFB	0		;MERKE KOMMANDO
+DMA:	DEFW	80H
+CSV:	DEFB	0
+ALVA:	DEFS	32
+ALVB:	DEFS	32
+	;
+DIRBF:	DEFS	128
+	;
+	;HD-BUFFER 512 Byte
+	;
+hdbuf:	defs 	512		;Lesepuffer HDD
+	;
+	;
+	defm 'ENDE BIOS'
+	;
+	END
+	;
+	;
+	

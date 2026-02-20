@@ -1,0 +1,920 @@
+ AS V1.42 Beta [Bld 115] - source file boot1013.asm - page 1 - 3/12/2017 11:04:02
+
+
+       1/       0 :                     ;-----------------------------------------------------------------------------
+       2/       0 :                     
+       3/       0 :                     ;  Z1013 booten von Diskette mit Zander FDC
+       4/       0 :                     
+       5/       0 :                     ; Programmparameter A-F 1/2 4/8; Default A 2 8
+       6/       0 :                     ; Bootlaufwerk, 1- oder 2-seitig, 40 oder 80 Spuren
+       7/       0 :                     ; 
+       8/       0 :                     ;-----------------------------------------------------------------------------
+       9/       0 :                     
+      10/       0 :                     			cpu	z80
+      11/       0 :                     			page	0
+      12/       0 :                     		
+      13/     100 :                     			org 100h
+      14/     100 :                     
+      15/     100 :                     ;-----------------------------------------------------------------------------
+      16/     100 :                     ; physischer Disketten-Transfer
+      17/     100 :                     ;-----------------------------------------------------------------------------
+      18/     100 :                     
+      19/     100 : 3E 02               		ld	a,2				; CPM-Kommando
+      20/     102 : 32 83 05            		ld	(param12), a			; Defaultwert 2
+      21/     105 : 3E 08               		ld	a,8
+      22/     107 : 32 84 05            		ld	(param48), a			; Defaultwert 8
+      23/     10A :                     
+      24/     10A :                     ; 4 MHz
+      25/     10A : DB 04               		IN	A,(4)	
+      26/     10C : CB F7               		SET	6,A	
+      27/     10E : D3 04               		OUT	(4),A		;4 MHz - Peters Platine
+      28/     110 :                     
+      29/     110 : C3 8A 03            		jp	inifd
+      30/     113 :                     		include biosfdc.inc
+(1)    1/     113 :                     ;Source: BIOSDSKT.MAC (CPA) + Kramer
+(1)    2/     113 :                     
+(1)    3/     113 :                     ;************************************************
+(1)    4/     113 :                     ; physischer Disketten-Transfer
+(1)    5/     113 :                     ;************************************************
+(1)    6/     113 :                     
+(1)    7/     113 :                     ;
+(1)    8/     113 :                     ; FDC-Ports:
+(1)    9/     113 :                     ; ----------
+(1)   10/     113 :                     
+(1)   11/     113 :                     
+(1)   12/     113 :                     ;KC87
+(1)   13/     113 : =98H                FDCD         	equ	98h  	; FDC Datenregister
+(1)   14/     113 : =99H                FDCC         	equ	99h  	; FDC Steueregister	
+(1)   15/     113 : =A0H                FDCZ        	equ	0A0h 	; FDC Zusatzregister
+(1)   16/     113 :                     
+(1)   17/     113 :                     ;BIC
+(1)   18/     113 :                     ;FDCD         	equ	40h  	; FDC Datenregister 
+(1)   19/     113 :                     ;FDCC         	equ	41h  	; FDC Steueregister	
+(1)   20/     113 :                     ;FDCZ        	equ	48h 	; FDC Zusatzregister
+(1)   21/     113 :                     
+(1)   22/     113 :                     				; 5 4 3 2 1 0
+(1)   23/     113 :                     				; x x 0 0 x x 
+(1)   24/     113 :                     				; | |     | |
+(1)   25/     113 :                     				; | |     | Motor Laufwerk 0 ein/aus
+(1)   26/     113 :                     				; | |     Motor Laufwerk 1 ein/aus
+(1)   27/     113 :                     				; | Terminal Count aktivieren/deakt.
+(1)   28/     113 :                     				; FDC Reset
+(1)   29/     113 :                     
+(1)   30/     113 :                     ;
+(1)   31/     113 :                     ; Aufruf:
+(1)   32/     113 :                     ; -------
+(1)   33/     113 :                     ; Bereitstellung der Parameter auf den Bytes:
+(1)   34/     113 :                     
+(1)   35/     113 :                     ;       ft.kom:	db	0	; bit0 - =1 ohne Fehlerwiederholung
+(1)   36/     113 :                     ;				     1 - lesen ft.len von beliebigem Sektor
+(1)   37/     113 :                     ;				     2 - schreiben (wenn auch bit0: mit verify)
+(1)   38/     113 :                     ;				     3 - 0-FM; 1-MFM   (5"FM nur bei PC1715)
+(1)   39/     113 :                     ;				     4 - 0-8"; 1-5"
+(1)   40/     113 :                     ;				     5 - 0- 40-Spur-Laufwerk; 1- 80-Spur-LW
+(1)   41/     113 :                     ;				     7 - =0 Vorderseite, =1 Rueckseite
+(1)   42/     113 :                     ;	ft.adr: dw	0	; Transferadresse
+(1)   43/     113 :                     ;	ft.lwn: db	0	; 0..3 phys. Laufwerksnummer
+(1)   44/     113 :                     ;	ft.trk: db	0	; 0..  track
+(1)   45/     113 :                     ;	ft.sid: db	0	; 0..ff side (side=0 auf Rueckseite moeglich!)
+(1)   46/     113 :                     ;	ft.sec: db	0	; 0..  sector (beliebig bei SektId lesen)
+(1)   47/     113 :                     ;	ft.len: db	0	; 0..3 Sektorlaenge (auch 0..3 bei SektId les.)
+(1)   48/     113 :                     ;	ft.anz: db	0	; 0.. Anzahl der zu uebertragenden Sektoren
+(1)   49/     113 :                     ;				;      =0: nur Positionieren
+(1)   50/     113 :                     ;				;      (<>0 bei SektId lesen)
+(1)   51/     113 :                     ;       ft.stp: db	0	;      Anzahl der Stepimpulse von Spur zu Spur
+(1)   52/     113 :                     ;	ft.sti: db	0	;      Schrittzeit von Spur zu Spur
+(1)   53/     113 :                     ;				;      in 0,1ms Einheiten
+(1)   54/     113 :                     ;
+(1)   55/     113 :                     ;	call	floppy
+(1)   56/     113 :                     ;       ...			; in A steht Ergebniskode
+(1)   57/     113 :                     ;				; alle Register (auch IX) undef.
+(1)   58/     113 :                     ;
+(1)   59/     113 :                     ; Ergebniskode (in Reg. A):
+(1)   60/     113 :                     ;	00h kein Fehler (Z-Flag nicht von floppy gesetzt)
+(1)   61/     113 :                     ;	'C' CRC-Fehler
+(1)   62/     113 :                     ;	'D' LW nicht existent
+(1)   63/     113 :                     ;	'R' Geraet nicht bereit, aber existent
+(1)   64/     113 :                     ;	'S' Sektor nicht gefunden
+(1)   65/     113 :                     ;	'T' Spurnummer zu gross
+(1)   66/     113 :                     ;	'U' keine Marke gefunden
+(1)   67/     113 :                     ;	'W' Diskette schreibgeschuetzt
+(1)   68/     113 :                     
+(1)   69/     113 :                     ; Paramfeld wird an folgenden Stellen veraendert:
+(1)   70/     113 :                     ;  Komm. "Lesen Sekt,Id.":	ft.trk .. ft.len gestellt
+(1)   71/     113 :                     ;  Komm. "Schreiben mit Verify":ft.kom, bit 0 geloescht
+(1)   72/     113 :                     
+(1)   73/     113 : 3E 10               floppy:		ld	a, 15+1
+(1)   74/     115 : 32 74 03            			ld	(crerc), a		; Fehlerzaehler fuer CRC-Fehlerwiederholungen
+(1)   75/     118 : 3E 05               			ld	a, 4+1			; Fehlerzaehler fuer Spurfindewiederholungen
+(1)   76/     11A : 32 75 03            			ld	(sperc), a
+(1)   77/     11D :                     
+(1)   78/     11D :                     	
+(1)   79/     11D : 3A 6C 03            			ld	a, (ft.lwn)
+(1)   80/     120 : 4F                  			ld	c, a
+(1)   81/     121 : B7                  			or	a
+(1)   82/     122 : 3E 01               			ld	a, 1
+(1)   83/     124 : 28 01               			jr	z, drv0
+(1)   84/     126 : 07                  			rlca
+(1)   85/     127 :                     ; Laufwerksnummer pruefen
+(1)   86/     127 : 21 76 03            drv0:		ld	hl, dFDCZ1
+(1)   87/     12A : A6                  			and	(hl)
+(1)   88/     12B : 20 05               			jr	nz, drv0a
+(1)   89/     12D : 3E 44               			ld	a, 'D'
+(1)   90/     12F : C3 F9 01            			jp	fehret
+(1)   91/     132 : D3 A0               drv0a:		out	(FDCZ),	a
+(1)   92/     134 : 32 77 03            			ld	(dFDCZ2), a
+(1)   93/     137 :                     
+(1)   94/     137 :                     
+(1)   95/     137 :                     
+(1)   96/     137 : 3A 69 03            			ld	a, (ft.kom)
+(1)   97/     13A : E6 80               			and	80h
+(1)   98/     13C : 07                  			rlca
+(1)   99/     13D : 07                  			rlca
+(1)  100/     13E : 07                  			rlca
+(1)  101/     13F : B1                  			or	c
+(1)  102/     140 : 32 79 03            			ld	(UNIT), a
+(1)  103/     143 : 3A 71 03            			ld	a, (ft.anz)
+(1)  104/     146 : 21 6D 03            			ld	hl, ft.trk
+(1)  105/     149 : B6                  			or	(hl)
+(1)  106/     14A : 20 06               			jr	nz, floppy3
+(1)  107/     14C : CD FF 01            			call	recal2
+(1)  108/     14F : C3 F9 01            			jp	fehret
+(1)  109/     152 :                     
+(1)  110/     152 : CD 33 02            floppy3:	call	seek
+(1)  111/     155 : B7                  			or	a
+(1)  112/     156 : 28 15               			jr	z, floppy5
+(1)  113/     158 : C3 F9 01            			jp	fehret
+(1)  114/     15B :                     
+(1)  115/     15B : 21 75 03            floppy4:	ld	hl, sperc
+(1)  116/     15E : 35                  			dec	(hl)
+(1)  117/     15F : 3E 54               			ld	a, 'T'			; Fehler "Spurnr. zu groß"
+(1)  118/     161 : CA F9 01            			jp	z, fehret
+(1)  119/     164 : CD FF 01            			call	recal2
+(1)  120/     167 : B7                  			or	a
+(1)  121/     168 : C2 F9 01            			jp	nz, fehret
+(1)  122/     16B : 18 E5               			jr	floppy3
+(1)  123/     16D :                     
+(1)  124/     16D : 21 6D 03            floppy5:	ld	hl, ft.trk
+(1)  125/     170 : 11 7A 03            			ld	de, TRCK
+(1)  126/     173 : 01 04 00            			ld	bc, 4
+(1)  127/     176 : ED B0               			ldir
+(1)  128/     178 : 34                  			inc	(hl)
+(1)  129/     179 : 35                  			dec	(hl)
+(1)  130/     17A : CA F8 01            			jp	z, noerr
+(1)  131/     17D : EB                  			ex	de, hl
+(1)  132/     17E : 3E FF               			ld	a, 0FFh
+(1)  133/     180 : 77                  			ld	(hl), a
+(1)  134/     181 : 23                  			inc	hl
+(1)  135/     182 : 3E 0A               			ld	a, 0Ah
+(1)  136/     184 : 77                  			ld	(hl), a
+(1)  137/     185 : 3A 70 03            			ld	a, (ft.len)
+(1)  138/     188 : B7                  			or	a
+(1)  139/     189 : 3E FF               			ld	a, 0FFh
+(1)  140/     18B : 20 02               			jr	nz, floppy6
+(1)  141/     18D : 3E 80               			ld	a, 80h
+(1)  142/     18F : 32 80 03            floppy6:	ld	(DTL), a
+(1)  143/     192 : 3A 69 03            			ld	a, (ft.kom)
+(1)  144/     195 : CB 4F               			bit	1, a
+(1)  145/     197 : 20 3F               			jr	nz, floppy10
+(1)  146/     199 : CB 57               			bit	2, a
+(1)  147/     19B : 20 05               			jr	nz, floppy7
+(1)  148/     19D : CD B4 02            			call	r8272
+(1)  149/     1A0 : 18 0D               			jr	floppy8
+(1)  150/     1A2 : CD 2A 02            floppy7:	call	sds
+(1)  151/     1A5 : CB 77               			bit	6, a
+(1)  152/     1A7 : 3E 57               			ld	a, 'W'			; Fehler "write protect"
+(1)  153/     1A9 : C2 F9 01            			jp	nz, fehret
+(1)  154/     1AC : CD AD 02            			call	w8272
+(1)  155/     1AF : B7                  floppy8:	or	a
+(1)  156/     1B0 : 28 17               			jr	z, floppy9
+(1)  157/     1B2 : FE 54               			cp	'T'				; Fehler "Spurnr. zu groß"
+(1)  158/     1B4 : 28 A5               			jr	z, floppy4
+(1)  159/     1B6 : FE 43               			cp	'C'				; Fehler: CRC-Zeichen falsch
+(1)  160/     1B8 : 20 3F               			jr	nz, fehret
+(1)  161/     1BA : 21 69 03            			ld	hl, ft.kom
+(1)  162/     1BD : CB 46               			bit	0, (hl)
+(1)  163/     1BF : 20 38               			jr	nz, fehret
+(1)  164/     1C1 : 21 74 03            			ld	hl, crerc
+(1)  165/     1C4 : 35                  			dec	(hl)
+(1)  166/     1C5 : 28 32               			jr	z, fehret
+(1)  167/     1C7 : 18 A4               			jr	floppy5
+(1)  168/     1C9 : 21 69 03            floppy9:	ld	hl, ft.kom
+(1)  169/     1CC : CB 76               			bit	6, (hl)
+(1)  170/     1CE : 28 28               			jr	z, noerr
+(1)  171/     1D0 : CB 56               			bit	2, (hl)
+(1)  172/     1D2 : 28 24               			jr	z, noerr
+(1)  173/     1D4 : CB 96               			res	2, (hl)
+(1)  174/     1D6 : 18 95               			jr	floppy5
+(1)  175/     1D8 : CD 4E 03            floppy10:	call	readID
+(1)  176/     1DB : 21 87 03            			ld	hl, reslt+4
+(1)  177/     1DE : 11 6E 03            			ld	de, ft.trk+1
+(1)  178/     1E1 : 01 03 00            			ld	bc, 3
+(1)  179/     1E4 : ED B0               			ldir
+(1)  180/     1E6 : B7                  			or	a
+(1)  181/     1E7 : 20 10               			jr	nz, fehret
+(1)  182/     1E9 : 21 6D 03            			ld	hl, ft.trk
+(1)  183/     1EC : 3A 86 03            			ld	a, (reslt+3)
+(1)  184/     1EF : BE                  			cp	(hl)
+(1)  185/     1F0 : 28 05               			jr	z, floppy11
+(1)  186/     1F2 : 34                  			inc	(hl)
+(1)  187/     1F3 : 35                  			dec	(hl)
+(1)  188/     1F4 : CA 5B 01            			jp	z, floppy4
+(1)  189/     1F7 : 77                  floppy11:	ld	(hl), a
+(1)  190/     1F8 :                     
+(1)  191/     1F8 :                     ; kein Fehler aufgetreten
+(1)  192/     1F8 : AF                  noerr:		xor	a
+(1)  193/     1F9 :                     
+(1)  194/     1F9 :                     ; Fertigmelden, Ergebnis in A
+(1)  195/     1F9 :                     fehret:		
+(1)  196/     1F9 : F5                  			push	af
+(1)  197/     1FA : AF                  			xor	a
+(1)  198/     1FB : D3 A0               			out	(FDCZ),	a
+(1)  199/     1FD : F1                  			pop	af
+(1)  200/     1FE : C9                  			ret
+(1)  201/     1FF :                     
+(1)  202/     1FF :                     ; Spur 0 einstellen ( 2 Versuche)
+(1)  203/     1FF : CD 03 02            recal2:		call	recal
+(1)  204/     202 : C8                  			ret	z
+(1)  205/     203 :                     
+(1)  206/     203 :                     ; Spur 0 einstellen
+(1)  207/     203 : 01 07 02            recal:		ld	bc, 207h	; com. Spur 0 einstellen
+(1)  208/     206 : CD 6B 02            			call	wcom	; com. in FDC schreiben
+(1)  209/     209 :                     
+(1)  210/     209 :                     ; prüfe Interruptstatus
+(1)  211/     209 : 01 08 01            sense:		ld	bc, 108h
+(1)  212/     20C : CD 6B 02            			call	wcom	; com. in FDC schreiben
+(1)  213/     20F : CD 88 02            			call	rbyte	; 1 Byte lesen
+(1)  214/     212 : 47                  			ld	b, a		; Resultatbyte (sto) in A enthält Fehlercode
+(1)  215/     213 : E6 C0               				and	0C0h
+(1)  216/     215 : FE 80               			cp	80h
+(1)  217/     217 : C4 88 02            			call	nz, rbyte	;PCN lesen
+(1)  218/     21A : CB 68               			bit	5, b		; Seek Ende?
+(1)  219/     21C : 28 EB               			jr	z, sense	; solange noch kein Seek Ende
+(1)  220/     21E : 3E 18               			ld	a, 00011000b
+(1)  221/     220 : A0                  			and	b
+(1)  222/     221 : C8                  			ret	z
+(1)  223/     222 : 3E 46               			ld	a, 'F'		; Fehler "Fehler bei Ausführung des SEEK-Kommandos"
+(1)  224/     224 : CB 60               			bit	4, b
+(1)  225/     226 : C0                  			ret	nz
+(1)  226/     227 : 3E 52               			ld	a, 'R'		; Fehler "Gerät nicht bereit"
+(1)  227/     229 : C9                  			ret
+(1)  228/     22A :                     
+(1)  229/     22A :                     ; prüfe Laufwerkstatus
+(1)  230/     22A : 01 04 02            sds:		ld	bc, 204h
+(1)  231/     22D : CD 6B 02            			call	wcom	; com. in FDC schreiben
+(1)  232/     230 : C3 88 02            			jp	rbyte		; Status Reg. lesen
+(1)  233/     233 :                     
+(1)  234/     233 :                     ; Spur einstellen
+(1)  235/     233 : CD 4E 02            seek:		call	rdy		; Laufwerk bereit?
+(1)  236/     236 : C0                  			ret	nz
+(1)  237/     237 : 3A 72 03            			ld	a, (ft.stp)
+(1)  238/     23A : 47                  			ld	b, a
+(1)  239/     23B : 3A 6D 03            			ld	a, (ft.trk)
+(1)  240/     23E : 05                  			dec	b
+(1)  241/     23F : 28 01               			jr	z, seek1
+(1)  242/     241 : 87                  			add	a, a
+(1)  243/     242 : 32 7A 03            seek1:		ld	(TRCK), a	
+(1)  244/     245 : 01 0F 03            seek2:		ld	bc, 30Fh	; com. Spur einstellen
+(1)  245/     248 : CD 6B 02            			call	wcom		; com. in FDC schreiben
+(1)  246/     24B : C3 09 02            			jp	sense		; prüfe Interruptstatus
+(1)  247/     24E :                     
+(1)  248/     24E :                     ; Laufwerk bereit?
+(1)  249/     24E : D5                  rdy:		push	de
+(1)  250/     24F : ED 5B 81 03         			ld	de, (rdwait)
+(1)  251/     253 : C5                  rdy0:		push	bc
+(1)  252/     254 : CD 2A 02            			call	sds		; prüfe Laufwerkstatus
+(1)  253/     257 : C1                  			pop	bc
+(1)  254/     258 : CB 6F               			bit	5, a		; rdy-Bit in Statusreg. 3
+(1)  255/     25A : 20 0A               			jr	nz, rdy1	; falls alles i.O., raus hier 
+(1)  256/     25C : 1D                  			dec	e
+(1)  257/     25D : 20 F4               			jr	nz, rdy0
+(1)  258/     25F : 15                  			dec	d
+(1)  259/     260 : 20 F1               			jr	nz, rdy0
+(1)  260/     262 : 3E 52               			ld	a, 'R'		; Fehler "Gerät nicht bereit"
+(1)  261/     264 : 18 02               			jr	rdy2
+(1)  262/     266 : 3E 00               rdy1:		ld	a, 0
+(1)  263/     268 : D1                  rdy2:		pop	de
+(1)  264/     269 : B7                  			or	a
+(1)  265/     26A : C9                  			ret
+(1)  266/     26B :                     
+(1)  267/     26B :                     ; Kommando in FDC schreiben
+(1)  268/     26B : 21 78 03            wcom:		ld	hl, CTAB
+(1)  269/     26E : CD 81 02            wcom1:		call	delay	; Verzögerung f. Statusflag 8272
+(1)  270/     271 : DB 98               			in	a, (FDCD)
+(1)  271/     273 : E6 C0               			and	0C0h
+(1)  272/     275 : FE 80               			cp	80h		; RQM, DIO=OUT
+(1)  273/     277 : 20 F5               			jr	nz, wcom1
+(1)  274/     279 : 79                  			ld	a, c
+(1)  275/     27A : D3 99               			out	(FDCC), a
+(1)  276/     27C : 23                  			inc	hl
+(1)  277/     27D : 4E                  			ld	c, (hl)
+(1)  278/     27E : 10 EE               			djnz	wcom1
+(1)  279/     280 : C9                  			ret
+(1)  280/     281 :                     
+(1)  281/     281 :                     ;Verzögerung f. Statusflag 8272
+(1)  282/     281 : C5                  delay:		push	bc
+(1)  283/     282 : 06 01               			ld	b, 1
+(1)  284/     284 : 10 FE               			djnz	$
+(1)  285/     286 : C1                  			pop	bc
+(1)  286/     287 : C9                  			ret
+(1)  287/     288 :                     
+(1)  288/     288 :                     ;1 Byte lesen
+(1)  289/     288 : CD 81 02            rbyte:		call	delay	; Verzögerung f. Statusflag 8272
+(1)  290/     28B : CD A7 02            			call	irdy	; Bereit für Dateneingabe?
+(1)  291/     28E : DB 99               			in	a, (FDCC)
+(1)  292/     290 : C9                  			ret
+(1)  293/     291 :                     
+(1)  294/     291 :                     ; Lese 7 Resultbytes
+(1)  295/     291 : 06 06               rrslt:		ld	b, 6
+(1)  296/     293 : CD 88 02            			call	rbyte		; 1 Byte lesen
+(1)  297/     296 : 21 83 03            			ld	hl, reslt
+(1)  298/     299 : 77                  			ld	(hl), a
+(1)  299/     29A : E6 C0               			and	0C0h		; Fehler?
+(1)  300/     29C : 4F                  			ld	c, a
+(1)  301/     29D : CD 88 02            resl1:		call	rbyte	; 1 Byte lesen
+(1)  302/     2A0 : 23                  			inc	hl
+(1)  303/     2A1 : 77                  			ld	(hl), a
+(1)  304/     2A2 : 10 F9               			djnz	resl1
+(1)  305/     2A4 : 79                  			ld	a, c		; Fehlermelsung Status Reg. 0
+(1)  306/     2A5 : B7                  			or	a
+(1)  307/     2A6 : C9                  			ret
+(1)  308/     2A7 :                     
+(1)  309/     2A7 :                     ; Bereit für Dateneigabe?
+(1)  310/     2A7 : DB 98               irdy:		in	a, (FDCD)
+(1)  311/     2A9 : 07                  			rlca
+(1)  312/     2AA : 30 FB               			jr	nc, irdy	; noch nicht bereit
+(1)  313/     2AC : C9                  			ret
+(1)  314/     2AD :                     
+(1)  315/     2AD :                     ; Sektor schreiben
+(1)  316/     2AD : 11 ED A3            w8272:		ld	de, 0A3EDh	; Code OUTI
+(1)  317/     2B0 : 0E 05               			ld	c, 5
+(1)  318/     2B2 : 18 05               			jr	rwit
+(1)  319/     2B4 :                     
+(1)  320/     2B4 :                     ; Sektor lesen
+(1)  321/     2B4 : 11 ED A2            r8272:		ld	de, 0A2EDh	; Code INI
+(1)  322/     2B7 : 0E 06               			ld	c, 6
+(1)  323/     2B9 : ED 53 0B 03         rwit:		ld	(rwmode), de
+(1)  324/     2BD : CD 5F 03            			call	set_mfm_bit
+(1)  325/     2C0 : 32 78 03            			ld	(CTAB), a	; Befehlstabelle für LEseoperation, MFM lesen
+(1)  326/     2C3 : CD 4E 02            			call	rdy		; Laufwerk bereit?
+(1)  327/     2C6 : C0                  			ret	nz
+(1)  328/     2C7 : 21 80 00            			ld	hl, 128		; Blockgröße
+(1)  329/     2CA : 3A 70 03            			ld	a, (ft.len)	; Sektorlaenge
+(1)  330/     2CD : B7                  			or	a
+(1)  331/     2CE : 47                  			ld	b, a
+(1)  332/     2CF : 28 03               			jr	z, rwit2
+(1)  333/     2D1 : 29                  rwit1:		add	hl, hl		; max. speicherplatz ermitteln
+(1)  334/     2D2 : 10 FD               			djnz	rwit1
+(1)  335/     2D4 :                     ;		
+(1)  336/     2D4 : 3A 71 03            rwit2:		ld	a, (ft.anz)
+(1)  337/     2D7 : 47                  			ld	b, a
+(1)  338/     2D8 : 11 00 00            			ld	de, 0
+(1)  339/     2DB : EB                  			ex	de, hl		; hl=0
+(1)  340/     2DC : 19                  rwit3:		add	hl, de
+(1)  341/     2DD : 10 FD               			djnz	rwit3
+(1)  342/     2DF : 7D                  			ld	a, l
+(1)  343/     2E0 : B7                  			or	a
+(1)  344/     2E1 : D9                  			exx
+(1)  345/     2E2 : 47                  			ld	b, a
+(1)  346/     2E3 : D9                  			exx
+(1)  347/     2E4 : 28 01               			jr	z, rwit4
+(1)  348/     2E6 : 24                  			inc	h
+(1)  349/     2E7 : 44                  rwit4:		ld	b, h
+(1)  350/     2E8 : D9                  			exx
+(1)  351/     2E9 : 0E 99               			ld	c, FDCC
+(1)  352/     2EB : 2A 6A 03            			ld	hl, (ft.adr)
+(1)  353/     2EE : D9                  			exx
+(1)  354/     2EF : 16 20               			ld	d, 20h
+(1)  355/     2F1 : 21 1E 03            			ld	hl, rwret
+(1)  356/     2F4 : E5                  			push	hl
+(1)  357/     2F5 : 0E 98               			ld	c, FDCD
+(1)  358/     2F7 : C5                  			push	bc
+(1)  359/     2F8 : 06 09               			ld	b, 9		; Anzahl der Bytes
+(1)  360/     2FA : 3A 78 03            			ld	a, (CTAB)	; Anfangsadr. der CTAB
+(1)  361/     2FD : 4F                  			ld	c, a		; in c kopieren ... für wcom
+(1)  362/     2FE : F3                  			di
+(1)  363/     2FF : CD 6B 02            			call	wcom	; com. in FDC schreiben
+(1)  364/     302 : C1                  			pop	bc
+(1)  365/     303 : ED 78               rwit5:		in	a, (c)
+(1)  366/     305 : F2 03 03            			jp	p, rwit5
+(1)  367/     308 : A2                  			and	d
+(1)  368/     309 : C8                  			ret	z
+(1)  369/     30A : D9                  			exx
+(1)  370/     30B : ED A2               rwmode:		ini				; oder outi je nach read/write
+(1)  371/     30D : D9                  			exx
+(1)  372/     30E : 20 F3               			jr	nz, rwit5
+(1)  373/     310 : 10 F1               			djnz	rwit5
+(1)  374/     312 :                     ;Motor ausschalten
+(1)  375/     312 : 3A 77 03            			ld	a, (dFDCZ2)
+(1)  376/     315 : F6 10               			or	10h
+(1)  377/     317 : D3 A0               			out	(FDCZ),	a
+(1)  378/     319 : EE 10               			xor	10h
+(1)  379/     31B : D3 A0               			out	(FDCZ),	a
+(1)  380/     31D : E1                  			pop	hl
+(1)  381/     31E : FB                  rwret:		ei
+(1)  382/     31F :                     
+(1)  383/     31F : CD 91 02            ErrorEval:	call	rrslt	; Lese 7 Result Bytes
+(1)  384/     322 : C8                  			ret	z
+(1)  385/     323 : FE C0               			cp	0C0h
+(1)  386/     325 : 3E 52               			ld	a, 'R'		; Fehler "Gerät nicht bereit"
+(1)  387/     327 : C8                  			ret	z
+(1)  388/     328 : 79                  			ld	a, c
+(1)  389/     329 : FE 80               			cp	80h
+(1)  390/     32B : 3E 42               			ld	a, 'B'		; Fehler "fehlerhafte Befehlsausgabe (interner Fehler)"
+(1)  391/     32D : C8                  			ret	z
+(1)  392/     32E : 3A 84 03            			ld	a, (reslt+1)
+(1)  393/     331 : 4F                  			ld	c, a
+(1)  394/     332 : CB 39               			srl	c
+(1)  395/     334 : 3E 55               			ld	a, 'U'		; Fehler "keine Marke gefunden"
+(1)  396/     336 : D8                  			ret	c
+(1)  397/     337 : CB 39               			srl	c
+(1)  398/     339 : 3E 57               			ld	a, 'W'		; Fehler "Diskette schreibgeschützt"
+(1)  399/     33B : D8                  			ret	c
+(1)  400/     33C : CB 39               			srl	c
+(1)  401/     33E : 3E 53               			ld	a, 'S'		; Fehler "Sektor nicht gefunden"
+(1)  402/     340 : D8                  			ret	c
+(1)  403/     341 : CB 39               			srl	c
+(1)  404/     343 : CB 39               			srl	c
+(1)  405/     345 : 3E 43               			ld	a, 'C'		; Fehler "CRC-Fehler"
+(1)  406/     347 : D8                  			ret	c
+(1)  407/     348 : CB 39               			srl	c
+(1)  408/     34A : D8                  			ret	c
+(1)  409/     34B : 3E 53               			ld	a, 'S'		; Fehler "Sektor nicht gefunden"
+(1)  410/     34D : C9                  			ret
+(1)  411/     34E :                     
+(1)  412/     34E :                     ; Read Ident.
+(1)  413/     34E : CD 4E 02            readID:		call	rdy		; Laufwerk bereit?
+(1)  414/     351 : C0                  			ret	nz
+(1)  415/     352 : 01 0A 02            			ld	bc, 20Ah	; com Read Ident
+(1)  416/     355 : CD 5F 03            			call	set_mfm_bit
+(1)  417/     358 : 4F                  			ld	c, a
+(1)  418/     359 : CD 6B 02            			call	wcom	; com. in FDC schreiben
+(1)  419/     35C : C3 1F 03            			jp	ErrorEval
+(1)  420/     35F :                     
+(1)  421/     35F :                     ;
+(1)  422/     35F : 3A 69 03            set_mfm_bit:ld	a, (ft.kom)
+(1)  423/     362 : E6 08               			and	8
+(1)  424/     364 : 07                  			rlca
+(1)  425/     365 : 07                  			rlca
+(1)  426/     366 : 07                  			rlca
+(1)  427/     367 : B1                  			or	c
+(1)  428/     368 : C9                  			ret
+(1)  429/     369 :                     
+(1)  430/     369 : 00                  ft.kom:		db	0
+(1)  431/     36A : 00 00               ft.adr:		dw	0
+(1)  432/     36C : 00                  ft.lwn:		db	0
+(1)  433/     36D : 00                  ft.trk:		db	0
+(1)  434/     36E : 00                  ft.sid:		db	0
+(1)  435/     36F : 00                  ft.sec:		db	0
+(1)  436/     370 : 00                  ft.len:		db	0
+(1)  437/     371 : 00                  ft.anz:		db	0
+(1)  438/     372 : 00                  ft.stp:		db	0
+(1)  439/     373 : 00                  ft.sti:		db	0
+(1)  440/     374 :                     
+(1)  441/     374 : 00                  crerc:		db	0
+(1)  442/     375 : 00                  sperc:		db	0
+(1)  443/     376 :                     
+(1)  444/     376 : 00                  dFDCZ1:		db	0			; Merkzelle FDC Zusatzregister
+(1)  445/     377 : 00                  dFDCZ2:		db	0			; Merkzelle FDC Zusatzregister
+(1)  446/     378 : 46                  CTAB:		db	46h			; Befehlscode für MFM lesen
+(1)  447/     379 : 00                  UNIT:		db	0			; Kopf/Laufwerksbyte
+(1)  448/     37A : 00                  TRCK:		db	0			; Spurnummer (Zylinder)
+(1)  449/     37B : 00                  HED:		db	0 			; Kopfnummer (0,1)
+(1)  450/     37C : 01                  HSTSEC:		db	1 			; Sektornummer
+(1)  451/     37D : 03                  N:			db	3 			; relative Sektorlänge 2^N; 3 => 1024 Byte
+(1)  452/     37E : FF                  EOT:		db	0FFh 		; Nummer des letzten Sektors
+(1)  453/     37F : 10                  GPL:		db	10h 		; Anzahl der Lückenbytes in GAP3
+(1)  454/     380 : FF                  DTL:		db	0FFh		; Datenlänge (bei N>0 = 0FFh)
+(1)  455/     381 :                     
+(1)  456/     381 : 88 13               rdwait:		dw	5000		; timeout-wert für rdy
+(1)  457/     383 :                     
+(1)  458/     383 :                     ; Resulttab. f. FDC
+(1)  459/     383 : 00                  reslt:		db	   0 		; ST0
+(1)  460/     384 : 00                  			db	   0 		; ST1
+(1)  461/     385 : 00                  			db	   0 		; ST2
+(1)  462/     386 : 00                  			db	   0 		; Cyl.
+(1)  463/     387 : 00                  			db	   0 		; Head	
+(1)  464/     388 : 00                  			db	   0		; Record
+(1)  465/     389 : 00                  			db	   0 		; N
+(1)  466/     38A :                     ;
+(1)  467/     38A :                     
+      31/     38A :                     
+      32/     38A :                     ;-----------------------------------------------------------------------------
+      33/     38A :                     ; Initialisierung U8272
+      34/     38A :                     ;-----------------------------------------------------------------------------
+      35/     38A :                     
+      36/     38A :                     inifd:
+      37/     38A : 3E 20               		ld	a, 100000b
+      38/     38C : D3 A0               		out	(FDCZ),	a
+      39/     38E : 3E 13               		ld	a, 10011b
+      40/     390 : D3 A0               		out	(FDCZ),	a
+      41/     392 : 06 00               binit1:		ld	b, 0				; INITIALISIERUNG P8272
+      42/     394 : 10 FE               binit2:		djnz	binit2
+      43/     396 : DB 98               		in	a, (FDCD)
+      44/     398 : FE 80               		cp	80h
+      45/     39A : 28 06               		jr	z, binit4
+      46/     39C : DB 99               		in	a, (FDCC)
+      47/     39E : 18 F2               binit3:		jr	binit1
+      48/     3A0 :                     
+      49/     3A0 : 9F                  STAB:		db  	9Fh
+      50/     3A1 : 3F                  		db  	3Fh
+      51/     3A2 :                     
+      52/     3A2 : 21 9F 03            binit4:		ld	hl, stab-1			; PARAMETER LADEN
+      53/     3A5 : 01 03 03            			ld	bc, 303h		; SPECIFY-COMM 3BYTES
+      54/     3A8 : CD 6E 02            			call	wcom1			; SCHREIBEN COMM
+      55/     3AB :                     ;
+      56/     3AB : AF                  			xor	a
+      57/     3AC : 32 79 03            			ld	(UNIT), a		; Laufwerk 0 als Standard setzen
+      58/     3AF : 32 76 03            			ld	(dFDCZ1), a
+      59/     3B2 :                     
+      60/     3B2 : 3E 10               			ld	a, 10h
+      61/     3B4 : 32 7A 03            			ld	(TRCK),	a
+      62/     3B7 : CD 45 02            			call	seek2
+      63/     3BA : 3E 01               			ld	a, 1
+      64/     3BC : 32 79 03            			ld	(UNIT),	a
+      65/     3BF : CD 45 02            			call	seek2
+      66/     3C2 : AF                  			xor	a
+      67/     3C3 : 32 79 03            			ld	(UNIT),	a
+      68/     3C6 : 32 7A 03            			ld	(TRCK),	a
+      69/     3C9 : CD FF 01            			call	recal2
+      70/     3CC :                     
+      71/     3CC : CD 2A 02            			call	sds			; Prüfe	Laufwerk Status
+      72/     3CF : CB 67               			bit	4, a
+      73/     3D1 : 3E 01               			ld	a, 1
+      74/     3D3 : 28 03               			jr	z, binit5
+      75/     3D5 : 32 76 03            			ld	(dFDCZ1), a		; sonst teste Laufwerk 1
+      76/     3D8 : 32 79 03            binit5:		ld	(UNIT), a
+      77/     3DB : CD FF 01            			call	recal2
+      78/     3DE : CD 2A 02            			call	sds			; Prüfe	Laufwerk Status
+      79/     3E1 : CB 67               			bit	4, a
+      80/     3E3 : 3A 76 03            			ld	a, (dFDCZ1)
+      81/     3E6 : 28 05               			jr	z, binit6
+      82/     3E8 :                     		
+      83/     3E8 :                     
+      84/     3E8 : F6 02               			or	2
+      85/     3EA :                     
+      86/     3EA : 32 76 03            			ld	(dFDCZ1), a
+      87/     3ED :                     binit6:		
+      88/     3ED : D3 A0               			out	(FDCZ), A		; Motor an
+      89/     3EF : FB                  			ei
+      90/     3F0 : 21 6C 05            			ld	hl, ftdir		; Bereitstellung der Parameter
+      91/     3F3 : 11 69 03            			ld	de, ft.kom
+      92/     3F6 : 01 0B 00            			ld	bc, 0Bh
+      93/     3F9 : ED B0               			ldir
+      94/     3FB : CD 13 01            			call	floppy			; ersten Sektor der Floppy laden
+      95/     3FE : B7                  			or	a			; trat ein Fehler auf?
+      96/     3FF : C2 54 05            			jp	nz, error		; Fehlermeldung	anzeigen und zurück zum	OS
+      97/     402 :                     			;
+      98/     402 :                     
+      99/     402 :                     ; Anzeige erster Dateiname
+     100/     402 : 21 86 05            			ld	hl, dskbuf+1
+     101/     405 : 06 06               			ld	b,6
+     102/     407 : 7E                  m1:			ld	a,(hl)
+     103/     408 : E7                  			rst 	20h
+     104/     409 : 00                  			db	0
+     105/     40A : 23                  			inc	hl
+     106/     40B : 10 FA               			djnz	m1
+     107/     40D :                     
+     108/     40D : 11 86 05            			ld	de, dskbuf+1		; speichere hier Dateinamen der	ersten
+     109/     410 :                     							; geladenen Datei .... sollte @cpmz9 sein
+     110/     410 : 06 06               			ld	b, 6			; Länge	des Dateinamens
+     111/     412 : 21 77 05            			ld	hl, acpmz9		; "@CPMZ9"
+     112/     415 :                     
+     113/     415 : 1A                  binit7:		ld	a, (de)				; nächstes Zeichen des Dateinamens
+     114/     416 :                     
+     115/     416 : E6 7F               			and	7Fh 			; strip high bit
+     116/     418 : BE                  			cp	(hl)			; und vergleichen
+     117/     419 :                     
+     118/     419 : 23                  			inc	hl
+     119/     41A : 13                  			inc	de
+     120/     41B :                     
+     121/     41B : 3E 4E               			ld	a, 'N'          	; Fehler "falsches System (Name!)"
+     122/     41D : C2 54 05            			jp	nz, error		; Fehlermeldung	anzeigen und zurück zum	OS
+     123/     420 : 10 F3               			djnz	binit7
+     124/     422 : 3E 0D               			ld	a,0dh
+     125/     424 : E7                  			RST	20H
+     126/     425 : 00                  			DB 0
+     127/     426 : E7                  			RST	20H
+     128/     427 : 00                  			DB	0
+     129/     428 : 3A 94 05            			ld	a, (dskbuf+15)		; Programmlänge als Blockanzahl (im CP/M-directory) 50h -> 10240 Byte
+     130/     42B : 06 00               			ld	b, 0
+     131/     42D : CB 3F               			srl	a			; obere 4 Bits von A nach unten bringen, untere Bits nach B aufsammeln
+     132/     42F : CB 18               			rr	b		
+     133/     431 : CB 3F               			srl	a		
+     134/     433 : CB 18               			rr	b		
+     135/     435 : CB 3F               			srl	a		
+     136/     437 : CB 18               			rr	b		
+     137/     439 : CB 10               			rl	b			; obere vier bits von B nach unten bringen
+     138/     43B : CB 10               			rl	b
+     139/     43D : CB 10               			rl	b
+     140/     43F : CB 10               			rl	b		
+     141/     441 : 32 7F 05            			ld	(blockanz), a		; Programmgröße in 2K-Blöcken
+     142/     444 : B7                  			or	a
+     143/     445 : 3E 4C               			ld	a, 'L'         		; Fehler "falsche Laenge des Systems"
+     144/     447 : CA 54 05            			jp	z, error		; Fehlermeldung	anzeigen und zurück zum	OS
+     145/     44A : 78                  			ld	a, b
+     146/     44B : 32 80 05            			ld	(blockrest), a
+     147/     44E :                     
+     148/     44E :                     ; "ldcpm0" landet auf dem Stack (Push) ... ein pop wird es aber nicht geben. Vielmehr holt
+     149/     44E :                     ; eines der folgenden "Ret" Opcode jenen Wert vom Stack und springt an diese
+     150/     44E :                     ; Speicheradresse in der Annahme, daß vorher von dort aus ein Call Befehl in jene
+     151/     44E :                     ; Subroutine ausgeführt wurde. Eventuell sollte so aufgrund der Kürze des Befehls
+     152/     44E :                     ; und der größeren Anzahl nötiger Call-Befehle Speicherplatz (vielleicht auch
+     153/     44E :                     ; Zeit) gespart werden.
+     154/     44E :                     
+     155/     44E :                     ; Bestimmen von Anfangssektor und Track (Default 2-8)
+     156/     44E : 21 6D 04            			ld	hl, ldcpm0
+     157/     451 : E5                  			push	hl
+     158/     452 :                     ;
+     159/     452 : 21 84 05            			ld	hl, param48		; 4 oder 8
+     160/     455 : 3A 83 05            			ld	a, (param12)		; 1 oder 2
+     161/     458 : 86                  			add	a, (hl)
+     162/     459 : 26 00               			ld	h, 0
+     163/     45B : FE 05               			cp	5
+     164/     45D : 06 03               			ld	b, 3
+     165/     45F : C8                  			ret	z			; 1/4 -> B = 3, H = 0
+     166/     460 : FE 09               			cp	9
+     167/     462 : 06 05               			ld	b, 5
+     168/     464 : C8                  			ret	z			; 1/8 -> B = 5, H = 0
+     169/     465 : FE 06               			cp	6
+     170/     467 : C8                  			ret	z			; 2/4 -> B = 5, H = 0
+     171/     468 : 06 02               			ld	b, 2
+     172/     46A : 26 01               			ld	h, 1			; 2/8 -> B = 2, H = 1
+     173/     46C : C9                  			ret
+     174/     46D :                     ;
+     175/     46D : 78                  ldcpm0:		ld	a, b
+     176/     46E : 32 6F 03            			ld	(ft.sec), a
+     177/     471 : 2E 00               			ld	l, 0
+     178/     473 : 22 6D 03            			ld	(ft.trk), hl
+     179/     476 : 21 69 03            			ld	hl, ft.kom
+     180/     479 : 3A 6E 03            			ld	a, (ft.sid)
+     181/     47C : 0F                  			rrca
+     182/     47D : CB BE               			res	7, (hl)
+     183/     47F : B6                  			or	(hl)
+     184/     480 : 77                  			ld	(hl), a
+     185/     481 : CD 13 01            			call	floppy			; Block lesen
+     186/     484 : B7                  			or	a
+     187/     485 : C2 54 05            			jp	nz, error		; Fehlermeldung	anzeigen und zurück zum	OS
+     188/     488 :                     
+     189/     488 :                     ; Test auf korrektes @cpmz9
+     190/     488 :                     ; als 1. Byte muß 11h stehen, dann folgt die Ladeadresse
+     191/     488 :                     ; (also ursprünglich di und ld de, 8000h)
+     192/     488 : 3A 86 05            			ld	a, (dskbuf+1)
+     193/     48B : FE 11               			cp	11h
+     194/     48D : 3E 3F               			ld	a, '?'         		; Fehler "kein CPMZ9-System"
+     195/     48F : C2 54 05            			jp	nz, error		; Fehlermeldung	anzeigen und zurück zum	OS
+     196/     492 : 2A 87 05            			ld	hl, (dskbuf+2)		; Parameter des Befehls LD DE, xxxx, also die Ladeadresse
+     197/     495 :                     
+     198/     495 : 22 7D 05            			ld	(loadadr), hl
+     199/     498 : EB                  			ex	de, hl
+     200/     499 :                     
+     201/     499 :                     ; Auf "dskbuf" wird das CPM Betriebssystem geladen. Mit dabei noch der komplette
+     202/     499 :                     ; Loader (128 Bytes). Ab "dskbuf+80h" gibt es dann den eigentlichen Programmcode.
+     203/     499 :                     
+     204/     499 : 21 05 06            			ld	hl, dskbuf+80h
+     205/     49C : 01 80 03            			ld	bc, 380h		; Ein Sektor ist 400h (1024) Bytes groß. Header weg bleiben 380h Bytes.
+     206/     49F : ED B0               			ldir				; Kopieren der ersten Bytes des CPMs nach loadadr
+     207/     4A1 : EB                  			ex	de, hl
+     208/     4A2 : 22 6A 03            			ld	(ft.adr), hl
+     209/     4A5 : 21 7F 05            			ld	hl, blockanz
+     210/     4A8 : 35                  			dec	(hl)
+     211/     4A9 : 3E 4C               			ld	a, 'L'
+     212/     4AB : CA 54 05            			jp	z, error		; Fehlermeldung	anzeigen und zurück zum	OS
+     213/     4AE : 21 6F 03            			ld	hl, ft.sec
+     214/     4B1 : 34                  			inc	(hl)
+     215/     4B2 :                     
+     216/     4B2 :                     ; Da das CPM noch nicht zur Verfügung steht, müssen die genutzten Sektoren und Tracks auf 
+     217/     4B2 :                     ; manuelle Weise ermittelt und ausgelesen werden.
+     218/     4B2 :                     
+     219/     4B2 : 21 6F 03            ldcpm1:		ld	hl, ft.sec
+     220/     4B5 : 3E 05               			ld	a, 5
+     221/     4B7 : BE                  			cp	(hl)
+     222/     4B8 : 30 0F               			jr	nc, ldcpm3
+     223/     4BA : 36 01               			ld	(hl), 1
+     224/     4BC : 2B                  			dec	hl
+     225/     4BD : 3A 83 05            			ld	a, (param12)		; 1 oder 2
+     226/     4C0 : 3D                  			dec	a
+     227/     4C1 : 28 04               			jr	z, ldcpm2
+     228/     4C3 : AE                  			xor	(hl)
+     229/     4C4 : 77                  			ld	(hl), a
+     230/     4C5 : 20 02               			jr	nz, ldcpm3
+     231/     4C7 : 2B                  ldcpm2:		dec	hl
+     232/     4C8 : 34                  			inc	(hl)
+     233/     4C9 : 3E 06               ldcpm3:		ld	a, 6
+     234/     4CB : 21 6F 03            			ld	hl, ft.sec
+     235/     4CE : 96                  			sub	(hl)
+     236/     4CF : 21 7F 05            			ld	hl, blockanz
+     237/     4D2 : BE                  			cp	(hl)
+     238/     4D3 : 38 01               			jr	c, ldcpm4
+     239/     4D5 : 7E                  			ld	a, (hl)
+     240/     4D6 : 32 71 03            ldcpm4:		ld	(ft.anz), a
+     241/     4D9 : 21 69 03            			ld	hl, ft.kom
+     242/     4DC : 3A 6E 03            			ld	a, (ft.sid)
+     243/     4DF : 0F                  			rrca
+     244/     4E0 : CB BE               			res	7, (hl)
+     245/     4E2 : B6                  			or	(hl)
+     246/     4E3 : 77                  			ld	(hl), a
+     247/     4E4 : CD 13 01            			call	floppy			; nächsten Sektor lesen
+     248/     4E7 : B7                  			or	a
+     249/     4E8 : C2 54 05            			jp	nz, error		; Fehlermeldung	anzeigen und zurück zum	OS
+     250/     4EB : 21 71 03            			ld	hl, ft.anz
+     251/     4EE : 46                  			ld	b, (hl)
+     252/     4EF : 2A 6A 03            			ld	hl, (ft.adr)
+     253/     4F2 : 11 00 04            ldcpm5:		ld	de, 400h			; Länge ein Sektor
+     254/     4F5 : 19                  			add	hl, de
+     255/     4F6 : 10 FA               			djnz	ldcpm5
+     256/     4F8 : 22 6A 03            			ld	(ft.adr), hl
+     257/     4FB : 3A 6F 03            			ld	a, (ft.sec)
+     258/     4FE : 21 71 03            			ld	hl, ft.anz
+     259/     501 : 11 6F 03            			ld	de, ft.sec
+     260/     504 : 86                  			add	a, (hl)
+     261/     505 : EB                  			ex	de, hl
+     262/     506 : 77                  			ld	(hl), a
+     263/     507 : 3A 7F 05            			ld	a, (blockanz)
+     264/     50A : EB                  			ex	de, hl
+     265/     50B : 96                  			sub	(hl)
+     266/     50C : 32 7F 05            			ld	(blockanz), a
+     267/     50F : 38 02               			jr	c, ldcpm6
+     268/     511 : 20 9F               			jr	nz, ldcpm1
+     269/     513 : 3A 80 05            ldcpm6:		ld	a, (blockrest)
+     270/     516 : B7                  			or	a
+     271/     517 : 28 2E               			jr	z, ldcpm8
+     272/     519 : CB 7F               			bit	7, a
+     273/     51B : 20 19               			jr	nz, ldcpm7
+     274/     51D : CB FF               			set	7, a
+     275/     51F : 32 80 05            			ld	(blockrest), a
+     276/     522 : 3E 01               			ld	a, 1
+     277/     524 : 32 7F 05            			ld	(blockanz), a
+     278/     527 : 2A 6A 03            			ld	hl, (ft.adr)
+     279/     52A : 22 81 05            			ld	(blockadr), hl
+     280/     52D : 21 85 05            			ld	hl, dskbuf
+     281/     530 : 22 6A 03            			ld	(ft.adr), hl
+     282/     533 : C3 B2 04            			jp	ldcpm1
+     283/     536 :                     ; letzten Sektor kopieren
+     284/     536 : E6 7F               ldcpm7:		and	7Fh
+     285/     538 : 0E 00               			ld	c, 0
+     286/     53A : 1F                  			rra
+     287/     53B : CB 19               			rr	c
+     288/     53D : 47                  			ld	b, a
+     289/     53E : 21 85 05            			ld	hl, dskbuf
+     290/     541 : ED 5B 81 05         			ld	de, (blockadr)
+     291/     545 : ED B0               			ldir
+     292/     547 :                     
+     293/     547 : 2A 7D 05            ldcpm8:		ld	hl, (loadadr)	
+     294/     54A :                     			;ld	a,h
+     295/     54A :                     			;cp	0fh
+     296/     54A :                     			;jr	nz,ldcpm81
+     297/     54A :                     			;jp	(hl)
+     298/     54A : 01 00 16            ldcpm81:	ld	bc, 1600h			; Offset CCP+BDOS
+     299/     54D : 09                  			add	hl, bc			; zu Ladeadr. addieren
+     300/     54E :                     			
+     301/     54E : E7                  			rst 20h
+     302/     54F : 07                  			db	7	; OUTHL
+     303/     550 :                     
+     304/     550 : 3A 6F 05            			ld	a, (ftdir+3)		; Boot-Laufwerk holen
+     305/     553 :                     			
+     306/     553 : E9                  			jp	(hl)			; und starten des BIOS	; oder des Monitors
+     307/     554 :                     		; -- FINI --
+     308/     554 :                     
+     309/     554 :                     ;-----------------------------------------------------------------------------
+     310/     554 :                     ; Fehlermeldung	anzeigen und zurück zum	OS
+     311/     554 :                     ;-----------------------------------------------------------------------------
+     312/     554 : F5                  error:		push	af
+     313/     555 : E7                  			RST	20H			; "Boot-Error: "
+     314/     556 : 02                  			DB	2
+     315/     557 : 0D 42 6F 6F 74 2D   aBootError:	db	0dh,"Boot-Error:" 
+                    45 72 72 6F 72 3A 
+     316/     563 : A0                  			db 20H+80H
+     317/     564 : F1                  			pop	af
+     318/     565 : E7                  			RST	20H
+     319/     566 : 00                  			DB	0
+     320/     567 :                     			;RET
+     321/     567 :                     			;jp	0f000H			; Systemwarmstart
+     322/     567 :                     
+     323/     567 : 3E 0D               			ld	a,0dh
+     324/     569 : E7                  			RST	20H
+     325/     56A : 00                  			DB	0
+     326/     56B : FF                  			rst 38h
+     327/     56C :                     
+     328/     56C :                     ;-----------------------------------------------------------------------------
+     329/     56C :                     
+     330/     56C :                     
+     331/     56C :                     ; in loc_0_772 werden die 10 Byte nach ft.kom kopiert
+     332/     56C : 39                  ftdir:		db	39h 				; kommando
+     333/     56D : 85 05               			dw	dskbuf 			; Transferadresse
+     334/     56F : 00                  			db	0			; phys. Laufwerksnummer
+     335/     570 : 00                  			db	0 			; track
+     336/     571 : 00                  			db	0 			; side
+     337/     572 : 01                  			db	1 			; Sektorlaenge
+     338/     573 : 03                  			db	3 			; Anzahl der zu uebertragenden Sektoren
+     339/     574 : 01                  			db	1 			; Anzahl der Stepimpulse von Spur zu Spur
+     340/     575 : 01                  			db	1 			; Schrittzeit von Spur zu Spur
+     341/     576 :                     
+     342/     576 : 5A                  			db	 'Z' 			; ???????
+     343/     577 :                     
+     344/     577 : 40 5A 31 30 31 33   acpmz9:		db	"@Z1013"
+     345/     57D :                     
+     346/     57D : 00 00               loadadr:	dw	0				; Ziel-Ladeadr. des CPM (also i.allg. 8000h)
+     347/     57F :                     
+     348/     57F : 00                  blockanz:	db	0				; Größe des CPMs in 2K-Blöcken
+     349/     580 : 00                  blockrest:	db	0				; Anzahl der restl. 128-Byte Blöcke
+     350/     581 : 00 00               blockadr:	dw	0				; aktuelle Blockladeadresse
+     351/     583 :                     
+     352/     583 :                     
+     353/     583 : 00                  param12:	db	0				; 1 oder 2
+     354/     584 : 00                  param48:	db	0				; 4 oder 8
+     355/     585 :                     
+     356/     585 : =585H               dskbuf:		equ 	$				; Sektor-Buffer für Floppy, 1K Bereich ! (2K?)
+     357/     585 :                     
+     358/     585 :                     		end
+ AS V1.42 Beta [Bld 115] - source file boot1013.asm - page 2 - 3/12/2017 11:04:02
+
+
+  symbol table (* = unused):
+  ------------------------
+
+*ABOOTERROR :                   557 C |  ACPMZ9 :                       577 C |
+*ARCHITECTURE :  i386-unknown-win32 - | *BIGENDIAN :                      0 - |
+ BINIT1 :                       392 C |  BINIT2 :                       394 C |
+*BINIT3 :                       39E C |  BINIT4 :                       3A2 C |
+ BINIT5 :                       3D8 C |  BINIT6 :                       3ED C |
+ BINIT7 :                       415 C |  BLOCKADR :                     581 C |
+ BLOCKANZ :                     57F C |  BLOCKREST :                    580 C |
+*BRANCHEXT :                      0 - | *CASESENSITIVE :                  0 - |
+*CONSTPI :        3.141592653589793 - |  CRERC :                        374 C |
+ CTAB :                         378 C | *DATE :                   3/12/2017 - |
+ DELAY :                        281 C |  DFDCZ1 :                       376 C |
+ DFDCZ2 :                       377 C |  DRV0 :                         127 C |
+ DRV0A :                        132 C |  DSKBUF :                       585 - |
+ DTL :                          380 C | *EOT :                          37E C |
+ ERROR :                        554 C |  ERROREVAL :                    31F C |
+*FALSE :                          0 - |  FDCC :                          99 - |
+ FDCD :                          98 - |  FDCZ :                          A0 - |
+ FEHRET :                       1F9 C |  FLOPPY :                       113 C |
+ FLOPPY10 :                     1D8 C |  FLOPPY11 :                     1F7 C |
+ FLOPPY3 :                      152 C |  FLOPPY4 :                      15B C |
+ FLOPPY5 :                      16D C |  FLOPPY6 :                      18F C |
+ FLOPPY7 :                      1A2 C |  FLOPPY8 :                      1AF C |
+ FLOPPY9 :                      1C9 C |  FT.ADR :                       36A C |
+ FT.ANZ :                       371 C |  FT.KOM :                       369 C |
+ FT.LEN :                       370 C |  FT.LWN :                       36C C |
+ FT.SEC :                       36F C |  FT.SID :                       36E C |
+*FT.STI :                       373 C |  FT.STP :                       372 C |
+ FT.TRK :                       36D C |  FTDIR :                        56C C |
+*FULLPMMU :                       1 - | *GPL :                          37F C |
+*HAS64 :                          1 - | *HASDSP :                         0 - |
+*HASFPU :                         0 - | *HASPMMU :                        0 - |
+*HED :                          37B C | *HSTSEC :                       37C C |
+*INEXTMODE :                      0 - |  INIFD :                        38A C |
+*INLWORDMODE :                    0 - | *INMAXMODE :                      0 - |
+*INSRCMODE :                      0 - | *INSUPMODE :                      0 - |
+ IRDY :                         2A7 C |  LDCPM0 :                       46D C |
+ LDCPM1 :                       4B2 C |  LDCPM2 :                       4C7 C |
+ LDCPM3 :                       4C9 C |  LDCPM4 :                       4D6 C |
+ LDCPM5 :                       4F2 C |  LDCPM6 :                       513 C |
+ LDCPM7 :                       536 C |  LDCPM8 :                       547 C |
+*LDCPM81 :                      54A C | *LISTON :                         1 - |
+ LOADADR :                      57D C |  M1 :                           407 C |
+*MACEXP :                         1 - | *MOMCPU :                        80 - |
+*MOMCPUNAME :                   Z80 - | *N :                            37D C |
+*NESTMAX :                      100 - |  NOERR :                        1F8 C |
+*PACKING :                        0 - | *PADDING :                        1 - |
+ PARAM12 :                      583 C |  PARAM48 :                      584 C |
+ R8272 :                        2B4 C |  RBYTE :                        288 C |
+ RDWAIT :                       381 C |  RDY :                          24E C |
+ RDY0 :                         253 C |  RDY1 :                         266 C |
+ RDY2 :                         268 C |  READID :                       34E C |
+ RECAL :                        203 C |  RECAL2 :                       1FF C |
+*RELAXED :                        0 - |  RESL1 :                        29D C |
+ RESLT :                        383 C |  RRSLT :                        291 C |
+ RWIT :                         2B9 C |  RWIT1 :                        2D1 C |
+ RWIT2 :                        2D4 C |  RWIT3 :                        2DC C |
+ RWIT4 :                        2E7 C |  RWIT5 :                        303 C |
+ RWMODE :                       30B C |  RWRET :                        31E C |
+ SDS :                          22A C |  SEEK :                         233 C |
+ SEEK1 :                        242 C |  SEEK2 :                        245 C |
+ SENSE :                        209 C |  SET_MFM_BIT :                  35F C |
+ SPERC :                        375 C |  STAB :                         3A0 C |
+*TIME :                    11:04:02 - |  TRCK :                         37A C |
+*TRUE :                           1 - |  UNIT :                         379 C |
+*VERSION :                     142F - |  W8272 :                        2AD C |
+ WCOM :                         26B C |  WCOM1 :                        26E C |
+
+    132 symbols
+     37 unused symbols
+
+ AS V1.42 Beta [Bld 115] - source file boot1013.asm - page 3 - 3/12/2017 11:04:02
+
+
+  codepages:
+  ----------
+
+STANDARD (0 changed characters)
+
+
+0.02 seconds assembly time
+
+    827 lines source file
+      2 passes
+      0 errors
+      0 warnings

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Programming Options</comment>
+<entry key="jkcemu.programming.basic.stack.size">128</entry>
+<entry key="jkcemu.programming.basic.language.code">DE</entry>
+<entry key="jkcemu.programming.basic.include_basic_lines">true</entry>
+<entry key="jkcemu.programming.format.source">false</entry>
+<entry key="jkcemu.programming.asm.labels.case_sensitive">false</entry>
+<entry key="jkcemu.programming.basic.open.lpt.enabled">true</entry>
+<entry key="jkcemu.properties.type">project</entry>
+<entry key="jkcemu.programming.basic.bounds.check">false</entry>
+<entry key="jkcemu.programming.basic.warn_unused_items">true</entry>
+<entry key="jkcemu.programming.warn_non_ascii_chars">true</entry>
+<entry key="jkcemu.programming.basic.print_line_num_on_abort">false</entry>
+<entry key="jkcemu.programming.basic.address.bss">-1</entry>
+<entry key="jkcemu.programming.basic.address.code">256</entry>
+<entry key="jkcemu.programming.basic.open.crt.enabled">true</entry>
+<entry key="jkcemu.programming.source.file.name">info.bas</entry>
+<entry key="jkcemu.programming.basic.name">MYAPP</entry>
+<entry key="jkcemu.programming.basic.prefer_relative_jumps">true</entry>
+<entry key="jkcemu.programming.asm.allow_undocumented_instructions">false</entry>
+<entry key="jkcemu.programming.basic.breakoption">never</entry>
+<entry key="jkcemu.programming.labels_to_reassembler">false</entry>
+<entry key="jkcemu.programming.basic.show_assembler_source">false</entry>
+<entry key="jkcemu.programming.basic.open.vdip.enabled">true</entry>
+<entry key="jkcemu.programming.code.file.name">d:\hobby\z1013_128\cpa_vp\src\info.com</entry>
+<entry key="jkcemu.programming.code.to_file">true</entry>
+<entry key="jkcemu.programming.suppress_label_recreate_in_debugger">false</entry>
+<entry key="jkcemu.programming.basic.stack.check">false</entry>
+<entry key="jkcemu.programming.basic.open.file.enabled">true</entry>
+<entry key="jkcemu.programming.asm.syntax">zilog</entry>
+<entry key="jkcemu.programming.asm.labels.print">false</entry>
+<entry key="jkcemu.programming.basic.heap.size">1024</entry>
+<entry key="jkcemu.programming.code.to_emulator">true</entry>
+<entry key="jkcemu.programming.basic.target">CP/M-kompatibel</entry>
+<entry key="jkcemu.programming.labels_to_debugger">false</entry>
+<entry key="jkcemu.programming.code.to_second_system">false</entry>
+</properties>

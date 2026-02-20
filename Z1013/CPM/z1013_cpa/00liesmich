@@ -1,0 +1,108 @@
+#------------------------------------------------------------------------------
+# CP/A für Z1013
+#------------------------------------------------------------------------------
+
+Hardware: 
+	- Robotron-Floppy-Modul vom Z9001 (Adr. 98h,99h,A0h)
+	- Peters-Platine 64x16  oder  K1520-BWS von H.Poppe
+	- 64K RAM
+	- 4 MHz (wg. Floppy)
+
+
+V. Pohlers, 2017
+Neustadt i.H.
+
+
+#------------------------------------------------------------------------------
+# Booten
+#------------------------------------------------------------------------------
+
+
+Es wird eine 800K-Diskette mit 192 DIR-Einträgen erwartet (Z9001-Format)
+Inhalt:
+
+@Z1013.COM	(als erste Datei!)
+SUBMIT.COM
+AUTOEXEC.SUB	
+
+
+Variante A: mit boot1013.z80
+----------------------------
+
+Programm laden (Adr. 100h)
+Starten mit J 100
+
+Es wird der erste gefundene Dateiname angezeigt. Das sollte normalerweise @Z1013
+sein. Dan wird diese Datei geladen und gestartet. Gibt es Fehler, dann wird
+"Boot-Error: " gefolgt von einem Fehlercode ausgegeben:
+
+	N: falsches System (Name stimmt nicht)
+	L: falsche Laenge des Systems
+	?: kein CCP am Systemanfang (richtiger Name, aber kein gültiges CP/A)
+	R: Geraet nicht bereit, aber existent
+	W: Diskette schreibgeschuetzt
+	S: Sektor nicht gefunden
+	T: Spurnummer zu gross oder nicht zu finden
+	C: CRC-Fehler
+	D: Laufwerk nicht existent
+	U: keine Marke gefunden
+	B: fehlerhafte Befehlsaugabe (interner Fehler)
+	F: Fehler ber Ausfuehrung des Seek-Kommandos
+
+
+Variante B: mit cpa_Z1013.z80
+-----------------------------
+
+Programm laden (Adr. 100h)
+Starten mit J 100
+
+Das CP/A wird direkt gestartet. Es muss eine (beliebige) Diskette im Laufwerk A:
+stecken.
+
+
+#------------------------------------------------------------------------------
+# Hinweise zum CP/A
+#------------------------------------------------------------------------------
+
+Das CP/A erkennt verschiedene übliche Diskettenformate automatisch.
+Beim Start wird das Kommando
+
+	"SUBMIT AUTOEXEC"
+
+ausgeführt. In der Datei AUTOEXEC.SUB können eigene CP/M-Kommandos stehen, die 
+beim Starten ausgeführt werden sollen
+
+
+
+#------------------------------------------------------------------------------
+# Neukompilieren
+#------------------------------------------------------------------------------
+
+Benötigt werden der Arnold-Assembler AS und Perl. Entwickelt wurde unter
+Windows. Ohne installiertes Perl werden keine .Z80-Dateien erstellt, die
+erzeugten bin-Dateien sind bereits die Z1013-Programme, nur ohne den Header.
+
+Die Hauptdatei ist cpa_Z1013.asm.
+Nach Änderungen ist 
+	make cpa
+zu starten.
+Es werden neue Dateien @z1013.com und cpa_Z1013.z80 erstellt.
+
+Die Datei @z1013.com muss als ERSTE Datei auf eine 800k-192Dir-Diskette kopiert
+werden.
+
+Die Boot-Datei boot1013.z80 wird mit
+	make boot
+neu erstellt.
+	
+Die Boot-Diskette wird mit
+	make disk
+neu erstellt.
+
+Hinweis: Das CP/A wird von boot normalerweise an Adresse 4000h (LOADADRESS)
+geladen und von dort weiter ans RAM-Ende kopiert. Diese Ladeadresse sollte nicht
+verändert werden, damit es beim Umherkopieren im Speicher nicht zu
+Bereichsüberschneidungen kommt.
+
+Im Paket sind komplette Quellen des CP/A enthalten (CCP, BDOS, BIOS). Das CP/A
+kann damit für beliebige RAM-Bereiche generiert werden.
