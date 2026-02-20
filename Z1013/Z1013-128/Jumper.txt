@@ -1,0 +1,106 @@
+
+JP1  Monitorauswahl für PS/2:
+     1-2 geschlossen  2.02. Monitor                                              default
+     2-3 geschlossen  Brosig-Monitor (angepaßtes ATtinyprogramm notwendig!)
+
+JP2  Monitorauswahl für PS/2:
+     1-2 geschlossen  2.02. Monitor                                              default
+     2-3 geschlossen  Brosig-Monitor (angepaßtes ATtinyprogramm notwendig!)
+
+JP3  Monitorauswahl für PS/2:
+     1-2 geschlossen  2.02. Monitor                                              default
+     2-3 geschlossen  Brosig-Monitor (angepaßtes ATtinyprogramm notwendig!)
+
+JP4  Monitorauswahl für PS/2:
+     1-2 geschlossen  2.02. Monitor                                              default
+     2-3 geschlossen  Brosig-Monitor (angepaßtes ATtinyprogramm notwendig!)
+
+JP5  Monitorauswahl für PS/2:
+     offen            2.02. Monitor                                              default
+     geschlossen      Brosig-Monitor (angepaßtes ATtinyprogramm notwendig!)
+
+
+JP6  Umschaltung 64k Low / 64k High:
+     2-3 geschlossen  64k High kann mit FlipFlop D202/G1 (D6) aktiviert werden   default
+     1-2 geschlossen  64k High kann nicht aktiviert werden
+
+
+JP7  Taktfrequenzauswahl:
+     3-4 geschlossen  2 MHz                                                      default
+     1-2 geschlossen  1 MHz
+     5-6 geschlossen  4 MHz
+
+
+JP8  Definition Resetzustand:
+     1-2 geschlossen  32k Eprom ist nach Reset inaktiv                           default
+     2-3 geschlossen  32k Eprom ist nach Reset aktiv
+
+
+JP9  Definition Resetzustand:
+     2-3 geschlossen  Bereich EC00-FFFFh (BWS+Monitor) nach Reset aktiv          default
+     1-2 geschlossen  Bereich EC00-FFFFh (BWS+Monitor) nach Reset abgeschalten
+
+
+JP10 geschlossen                                                                 default
+
+
+JP11 Einblendung 32k Eprom:
+     1-2 geschlossen  32k Eprom kann mit FlipFlop D203/G1 (D5) aktiviert werden  default
+     2-3 geschlossen  32k Eprom kann nicht aktiviert werden
+
+
+JP12 leitet Z1013-Reset auf den Bus:
+     geschlossen      internes Reset auch auf den Bus                            default
+     offen            kein internes Reset zum Bus
+
+
+JP13 Spannungsversorgung X2/Tastatur:
+     offen            Anschluß X2C13 frei (bei Verwendung von EFS-Buchse)        default
+     geschlossen      Anschluß X2C13 auf +5V (da kein A13 an SUB-D)
+
+
+JP14 Auswahl von 4k Monitorbereichen:
+     Eprom 2764       ab 0000h  ab 1000h         (X = geschlossen/Low, O/- = offen/High)
+     1-2 geschlossen       X         O
+     3-4 geschlossen       -         -
+     5-6 geschlossen       -         -
+
+     Eprom 27128      ab 0000h  ab 1000h  ab 2000h  ab 3000h
+     1-2 geschlossen       X         O         X         O
+     3-4 geschlossen       -         -         -         -
+     5-6 geschlossen       X         X         O         O
+
+     Eprom 27256      ab 0000h  ab 1000h  ab 2000h  ab 3000h  ab 4000h  ab 5000h  ab ...
+     1-2 geschlossen       X         O         X         O         X         O         X
+     3-4 geschlossen       X         X         X         X         O         O         O
+     5-6 geschlossen       X         X         O         O         X         X         O
+
+
+JP15 Zustandssignalisierung:
+     1-2 geschlossen  /WR als Aktivitätsanzeige des Z1013                        default
+     3-4 geschlossen  Anzeige für +5V-Spannungsversorgung                        default
+
+
+JP16 Anpassung der OPV-Spannung:
+     offen            sobald JP20/1-2 geschlossen (-5V)                          default
+     geschlossen      sobald JP20/2-3 geschlossen (Masse)
+
+
+JP17 Zeichensatzumschaltung:
+     2-3 geschlossen  IBM-ZS kann mit FlipFlop D202/G2 (D7) aktiviert werden     default
+     1-2 geschlossen  IBM-ZS kann nicht aktiviert werden
+
+
+JP18 Definition Resetzustand:
+     1-2 geschlossen  IBM-ZS ist nach Reset inaktiv                              default
+     2-3 geschlossen  IBM-ZS ist nach Reset aktiv
+
+
+JP19 Definition Resetzustand:
+     1-2 geschlossen  RAM 64k High ist nach Reset inaktiv                        default
+     2-3 geschlossen  RAM 64k High ist nach Reset aktiv
+
+
+JP20 Anpassung der OPV-Spannung:
+     1-2 geschlossen  -5V                                                        default
+     2-3 geschlossen  Masse
