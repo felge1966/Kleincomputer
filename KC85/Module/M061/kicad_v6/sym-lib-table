@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name "KAMM")(type "KiCad")(uri "${KIPRJMOD}/KAMM.kicad_sym")(options "")(descr ""))
+  (lib (name "vs_rs")(type "KiCad")(uri "C:/Users/leer/Desktop/maleuma/kicad/m062_v6/vs_rs.kicad_sym")(options "")(descr ""))
+)

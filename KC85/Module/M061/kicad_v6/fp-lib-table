@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name "KAMM")(type "Legacy")(uri "${KIPRJMOD}/KAMM.mod")(options "")(descr ""))
+  (lib (name "m061_v6")(type "KiCad")(uri "C:/Users/leer/Desktop/maleuma/kicad/m061_v6")(options "")(descr ""))
+)
