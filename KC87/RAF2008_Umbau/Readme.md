@@ -1,10 +1,10 @@
-Umbau RAF2014 auf RAF512
+# Umbau RAF2014 auf RAF512
 
 Basis ist die RAF2014 von SRN
 
 Dafür standen mir die Gerberdaten zur Verfügung
 
-Schritte für RAM-Änderung
+## Schritte für RAM-Änderung
 
 - Adressierung von 6c4008 auf 628128
 
@@ -24,16 +24,16 @@ Schritte für RAM-Änderung
    - U12 (Pin 15) ADV (neu) mit U13 (Pin 8) verbinden
 
 
-- Kapazität
+## Kapazität
   
 >     ADV an ABx	ADV an U12 Pin	    Umfang RAF
 >     AB12	        15	                512K
 >     AB13	        14	                1024K
 >     AB14	        13	                2048K
 
-Mittels Port AX wird auf die zweite Hälfte der RAF2008 umgeschaltet
+Mittels Port AX wird auf die zweite Hälfte bei einer RAF2008 umgeschaltet
 
-- Jumper
+## Jumper
 
 >     Adresse	    8xh/2xh	    0/1
 >     Port20h	    geschlossen offen  
