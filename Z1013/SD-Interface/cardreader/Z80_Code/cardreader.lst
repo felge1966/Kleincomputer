@@ -1,0 +1,386 @@
+# File cardreader.asm
+0000			; 11.01.2025 Programme ueber SD Karte in den Z1013 laden 
+0000			; Version V0.99 
+0000			; je 0x100 byte ein * zur anzeige der Uebertragung 
+0000			; Funktionen: 
+0000			; J F800 Initialisierung der @ Programmaufrufe und NMI Resetadresse f800 eintragen 
+0000			; @L LOAD - der Datei datei.z80 von SD-Karte 
+0000			; @M Laden einer Datei die per Hand von Pico an den Z1013 gesendet wird 
+0000			; @S SAVE - Abspeichern von Programmcode auf SD Karte 
+0000			; @D Laden einer Datei datei.z80 (ohne Auflistung SD Inhalt) 
+0000			; @U reserviert fuer UPLOAD 
+0000			 
+0000			SIOAD:	equ	0x34		; SIO A Daten 
+0000			SIODB:	equ	0x35		; SIO B Daten 
+0000			SIOAS:	equ	0x36		; SIO A Steuerung 
+0000			SIOBS:	equ	0x37		; SIO B Steuerung 
+0000			 
+0000				org	0xF800 
+f800			 
+f800 21 b0 00		START:	ld	hl,0x00b0	; @ Adressen hinterlegen 
+f803 3e 53			ld	a,'S' 
+f805 77				ld	(hl),a 
+f806 23				inc	hl 
+f807 01 a9 f9			ld	bc,SAVE		; save file 
+f80a 79				ld	a,c 
+f80b 77				ld	(hl),a 
+f80c 23				inc	hl 
+f80d 78				ld	a,b 
+f80e 77				ld	(hl),a 
+f80f 23				inc	hl 
+f810 3e 4c			ld	a,'L' 
+f812 77				ld	(hl),a 
+f813 23				inc	hl 
+f814 01 e8 f8			ld	bc,LOAD		; load file 
+f817 79				ld	a,c 
+f818 77				ld	(hl),a 
+f819 23				inc	hl 
+f81a 78				ld	a,b 
+f81b 77				ld	(hl),a 
+f81c 23				inc	hl 
+f81d 3e 4d			ld	a,'M' 
+f81f 77				ld	(hl),a 
+f820 23				inc	hl 
+f821 01 a6 f8			ld	bc,LOADD3	; load von hand gesendetes file 
+f824 79				ld	a,c 
+f825 77				ld	(hl),a 
+f826 23				inc	hl 
+f827 78				ld	a,b 
+f828 77				ld	(hl),a 
+f829 23				inc	hl 
+f82a 3e 44			ld	a,'D' 
+f82c 77				ld	(hl),a 
+f82d 23				inc	hl 
+f82e 01 99 f8			ld	bc,LOADD	; file datei.z80 von sd karte lesen 
+f831 79				ld	a,c 
+f832 77				ld	(hl),a 
+f833 23				inc	hl 
+f834 78				ld	a,b 
+f835 77				ld	(hl),a 
+f836 23				inc	hl 
+f837 21 66 00			ld	hl,0x0066	; nmi funktion aktivieren 
+f83a 3e c3			ld	a,0xc3 
+f83c 77				ld	(hl),a 
+f83d 23				inc	hl 
+f83e 3e 00			ld	a,0x00 
+f840 77				ld	(hl),a 
+f841 23				inc	hl 
+f842 3e f0			ld	a,0xf0 
+f844 77				ld	(hl),a 
+f845 e7				rst	0x20		; prst datum und version 
+f846 02				db	0x02 
+f847 ..				db	"V0.99 11.01.2025 WWW.ICPLAN.DE" 
+f865 8d				db	0x8d		; neue zeile 
+f866 c9				ret 
+f867			 
+f867 00 18		SIOIB:	db 0x00,0x18		; kanal ruecksetzen 
+f869 01 00			db 0x01,0x00		; interrupt aus 
+f86b 03 c1			db 0x03,11000001b	; 8 bit, empfaenger ein 
+f86d 04 84			db 0x04,10000100b	; takt x32, 1 stopbit, ungerade patitaet 
+f86f 05 68			db 0x05,01101000b	; 8 bit, sender ein 
+f871			 
+f871 06 0a		INIT:	ld	b,10		; 10 byte sio initialisierung 
+f873 21 67 f8			ld	hl,SIOIB 
+f876 7e			INIT1:	ld	a,(hl) 
+f877 d3 36			out	(SIOAS),a 
+f879 23				inc	hl 
+f87a 10 fa			djnz	INIT1 
+f87c c9				ret 
+f87d			 
+f87d 3e 00		READ:	ld	a,0x00		; neue daten in sio ? 
+f87f d3 36			out	(SIOAS),a 
+f881 db 36			in	a,(SIOAS) 
+f883 e6 01			and	0x01 
+f885 28 f6			jr	z,READ 
+f887 db 34			in	a,(SIOAD) 
+f889 c9				ret 
+f88a			 
+f88a f5			SEND:	push	af 
+f88b 3e 00		SEND1:	ld	a,0x00		; sendepuffer leer? 
+f88d d3 36			out	(SIOAS),a 
+f88f db 36			in	a,(SIOAS) 
+f891 e6 04			and	0x04 
+f893 28 f6			jr	z,SEND1 
+f895 f1				pop	af 
+f896 d3 34			out	(SIOAD),a	; senden 
+f898 c9				ret 
+f899			 
+f899 cd 71 f8		LOADD:	call	INIT		; sio initialisieren 
+f89c 3e 44			ld	a,'D'		; zeichen D versenden 
+f89e cd 8a f8			call	SEND 
+f8a1 06 00		LOADD1:	ld	b,0x00		; zeitschleife 
+f8a3 c5			LOADD2:	push	bc 
+f8a4 06 00			ld	b,0x00 
+f8a6 00			LOADD3:	nop 
+f8a7 00				nop 
+f8a8 10 fc			djnz	LOADD3 
+f8aa c1				pop	bc 
+f8ab 10 f6			djnz	LOADD2 
+f8ad 18 03			jr	LOADD5 
+f8af			 
+f8af cd 71 f8		LOADD4:	call	INIT		; sio initialisieren 
+f8b2			 
+f8b2 e7			LOADD5: rst	0x20		; prst7 
+f8b3 02				db	0x02 
+f8b4 0c 8d			db	0x0c,0x8d	; seite loeschen, neue zeile 
+f8b6 06 40			ld	b,0x40		; zwei zeilen ascii lesen 
+f8b8 cd 7d f8		LOADD6:	call	READ		; byte in a seriell lesen 
+f8bb e7				rst	0x20 
+f8bc 00				db	0x00		; zeichen auf z1013 zeigen / darstellen 
+f8bd 10 f9			djnz	LOADD6 
+f8bf cd 7d f8			call	READ		; ram high byte lesen 
+f8c2 67				ld	h,a 
+f8c3 cd 7d f8			call	READ		; ram low byte 
+f8c6 6f				ld	l,a 
+f8c7			 
+f8c7 cd 7d f8			call	READ		; anzahl high 
+f8ca 47				ld	b,a 
+f8cb cd 7d f8			call	READ		; anzahl low 
+f8ce 4f				ld	c,a 
+f8cf cd 7d f8		LOADD7:	call	READ 
+f8d2 77				ld	(hl),a 
+f8d3 23				inc	hl 
+f8d4 0b				dec	bc 
+f8d5 3e 00			ld	a,0x00		; bc low auf 0 testen 
+f8d7 b9				cp	c 
+f8d8 20 f5			jr	nz,LOADD7 
+f8da 3e 2a			ld	a,'*'		; ein stern alle 0x100 byte 
+f8dc e7				rst	0x20 
+f8dd 00				db	0x00 
+f8de 3e 00			ld	a,0x00		; bc high auf 0 testen 
+f8e0 b8				cp	b 
+f8e1 20 ec			jr	nz,LOADD7 
+f8e3			 
+f8e3 3e 0d			ld	a,0x0d		; neue zeile vor ende 
+f8e5 e7				rst	0x20 
+f8e6 00				db	0x00 
+f8e7 c9				ret 
+f8e8			 
+f8e8			; ************************************************************************* 
+f8e8			; LOAD : SD Karte anzeige / einlesen 
+f8e8			; ************************************************************************* 
+f8e8			 
+f8e8 cd 71 f8		LOAD:	call	INIT		; sio initialisieren 
+f8eb 3e 4c			ld	a,'L'		; zeichen L versenden 
+f8ed cd 8a f8			call	SEND 
+f8f0 e7				rst	0x20		; prst7 
+f8f1 02				db	0x02 
+f8f2 0c 8d			db	0x0c, 0x8d	; bildschirm loeschen und neue zeile 
+f8f4 06 00			ld	b,0x00		; zeitschleife 
+f8f6 c5			LOAD01:	push	bc 
+f8f7 06 00			ld	b,0x00 
+f8f9 00			LOAD02:	nop 
+f8fa 00				nop 
+f8fb 10 fc			djnz	LOAD02 
+f8fd c1				pop	bc 
+f8fe 10 f6			djnz	LOAD01 
+f900 06 80			ld	b,0x80		; 4 zeilen seriell empfangen 
+f902 cd 7d f8		LOAD03:	call	READ 
+f905 e7				rst	0x20 
+f906 00				db	0x00 
+f907 10 f9			djnz	LOAD03 
+f909 06 29			ld	b,41		; schritte zurueck 
+f90b 3e 08			ld	a,0x08		; cursor links 
+f90d e7			LOAD04:	rst	0x20 
+f90e 00				db	0x00 
+f90f 10 fc			djnz	LOAD04 
+f911			 
+f911 e7			LOAD05:	rst	0x20		; zeichen von tastatur lesen 
+f912 04				db	0x04 
+f913 fe 0d			cp	0x0d            ; enter ? 
+f915 28 0d			jr	z,LOAD06 
+f917 fe 30			cp	0x30		; kleiner ascii 0 ? 
+f919 38 f6			jr	c,LOAD05        ; falsche tasten ignorieren 
+f91b f5				push	af		; retten tastatureingabe 
+f91c e7				rst	0x20            ; zahl zeichen ausgeben 
+f91d 00				db	0x00 
+f91e 06 28			ld	b,40            ; schritte weiter 
+f920 3e 09			ld	a,0x09 
+f922 18 05			jr	LOAD07 
+f924 f5			LOAD06: push	af		; retten tastatureingabe 
+f925 06 29			ld	b,41 
+f927 3e 09			ld	a,0x09		; cursor rechts 
+f929 e7			LOAD07:	rst	0x20 
+f92a 00				db	0x00 
+f92b 10 fc			djnz	LOAD07 
+f92d f1				pop	af		; tastatureingabe wiederherstellen 
+f92e cd 8a f8			call	SEND		; versenden 
+f931 01 c0 02			ld	bc,704		; 22 zeilen = 704 zeichen ausgeben 
+f934 cd 7d f8		LOAD08:	call	READ		; zeichen seriell lesen 
+f937 e7				rst	0x20 
+f938 00				db	0x00		; ausgeben 
+f939 3e 00			ld	a,0x00 
+f93b 0b				dec	bc 
+f93c b8				cp	b 
+f93d 20 f5			jr	nz,LOAD08 
+f93f b9				cp	c 
+f940 20 f2			jr	nz,LOAD08 
+f942			 
+f942 06 17			ld	b,23		; cursor links 
+f944 3e 08			ld	a,0x08 
+f946 e7			LOAD09: rst	0x20 
+f947 00				db	0x00 
+f948 10 fc			djnz	LOAD09 
+f94a 06 02			ld	b,0x02		; maximal 2 zahlen 
+f94c c5				push	bc 
+f94d e7			LOAD10: rst	0x20		; zeichen von tastatur lesen 
+f94e 04				db	0x04 
+f94f fe 0d			cp	0x0d		; enter ? 
+f951 28 27			jr	z,LOAD13 
+f953 fe 45			cp	'E'		; e wie ende? 
+f955 28 14			jr	z,LOAD11 
+f957 fe 30			cp	0x30		; kleiner ascii 0 ? 
+f959 38 f2			jr	c,LOAD10 
+f95b fe 3a			cp	0x3a		; groesser ascii 9 ? 
+f95d 30 ee			jr	nc,LOAD10 
+f95f e7				rst	0x20		; ausgeben 
+f960 00				db	0x00 
+f961 cd 8a f8		        call	SEND		; versenden 
+f964 c1				pop	bc		; wiederherstellen 
+f965 05				dec	b 
+f966 28 36			jr	z,LOAD16 
+f968 c5				push	bc		; noch mal retten 
+f969 18 e2			jr	LOAD10 
+f96b c1			LOAD11: pop	bc		; leerfunktion stack 
+f96c 3e 45			ld	a,'E'		; ein E fuer Ende versenden 
+f96e cd 8a f8			call	SEND 
+f971 06 17			ld	b,23            ; 23 mal cursor nach 
+f973 3e 09			ld	a,0x09		; rechts 
+f975 e7			LOAD12: rst	0x20 
+f976 00				db	0x00 
+f977 10 fc			djnz	LOAD12 
+f979 c9				ret			; abbruch / ende 
+f97a c1			LOAD13: pop	bc		; wiederherstellen 
+f97b f5				push	af		; retten 
+f97c 3e 02			ld	a,0x02		; zweite eingabe? 
+f97e b8				cp	b 
+f97f 28 04			jr	z,LOAD14 
+f981 3e 08			ld	a,0x08		; cursor einmal zurueck 
+f983 e7				rst	0x20 
+f984 00				db	0x00 
+f985 f1			LOAD14:	pop	af		; wiederhersstellen 
+f986 cd 8a f8			call	SEND            ; enter versenden -> zweite seite 
+f989 01 a9 02			ld	bc,681		; cursor stellen zuruecksetzen 
+f98c 3e 08		LOAD15: ld	a,0x08		; cursor links 
+f98e e7				rst	0x20 
+f98f 00				db	0x00 
+f990 0b				dec	bc 
+f991 3e 00			ld	a,0x00 
+f993 b8				cp	b 
+f994 20 f6			jr	nz,LOAD15 
+f996 b9				cp	c 
+f997 20 f3			jr	nz,LOAD15 
+f999 01 c0 02			ld	bc,704		; 22 zeilen ausgeben 
+f99c 18 96			jr	LOAD08 
+f99e 06 16		LOAD16: ld	b,22		; cursor rechts 
+f9a0 3e 09			ld	a,0x09 
+f9a2 e7			LOAD17: rst	0x20 
+f9a3 00				db	0x00 
+f9a4 10 fc			djnz	LOAD17 
+f9a6 c3 a1 f8			jp	LOADD1		; file einlesen 
+f9a9			 
+f9a9			; ************************************************************************* 
+f9a9			; SAVE : Speicherbereich auf SD Karte schreiben 
+f9a9			;        Programmname ist im Headersave Kopf und wird Dateiname *.z80 
+f9a9			; ************************************************************************* 
+f9a9			 
+f9a9 e7			SAVE:	rst	0x20		; prst7 test ausgeben 
+f9aa 02				db	0x02 
+f9ab 0d .. 0d .. a0		defb	0x0d,"Programmnamen eingeben (16 Z.)",0x0d,"________________.Z80 (Enter)",0xa0 
+f9e8 3e 08			ld	a,0x08		; Cursor nach links 
+f9ea 06 1d			ld	b,29		; x mal 
+f9ec e7			SA1:	rst	0x20 
+f9ed 00				db	0x00 
+f9ee 10 fc			djnz	SA1 
+f9f0			 
+f9f0 06 10			ld	b,0x10		; 16 Zeichen moeglich 
+f9f2 21 69 00			ld	hl,0x0069	; als Zwischenspeicher Stackberech nutzen 
+f9f5 e7			SA2:	rst	0x20		; lesen 
+f9f6 01				db	0x01 
+f9f7 fe 08			cp	0x08		; Cursor links nicht zulassen 
+f9f9 28 fa			jr	z,SA2 
+f9fb fe 09			cp	0x09		; Cursor rechts nicht zulassen 
+f9fd 28 f6			jr	z,SA2 
+f9ff 77				ld	(hl),a 
+fa00 23				inc	hl 
+fa01 e7				rst	0x20 
+fa02 00				db	0x00		; schreiben 
+fa03 10 f0			djnz	SA2 
+fa05 e7				rst	0x20		; prst7 
+fa06 02				db	0x02 
+fa07 .. 8d			db	".Z80",0x8d 
+fa0c			 
+fa0c cd 71 f8			call	INIT		; sio initialisieren 
+fa0f 3e 53			ld	a,'S'		; zeichen S versenden 
+fa11 cd 8a f8			call	SEND 
+fa14 06 00			ld	b,0x00		; zeitschleife 
+fa16 c5			SA3:	push	bc 
+fa17 06 00			ld	b,0x00 
+fa19 00			SA4:	nop 
+fa1a 00				nop 
+fa1b 10 fc			djnz	SA4 
+fa1d c1				pop	bc 
+fa1e 10 f6			djnz	SA3 
+fa20			 
+fa20 3a 1b 00			ld	a,(0x001b)	; low erster parameter -> bc 
+fa23 4f			        ld	c,a 
+fa24 cd 8a f8			call	SEND 
+fa27 3a 1c 00			ld	a,(0x001c)	; high 
+fa2a 47				ld	b,a 
+fa2b cd 8a f8			call	SEND 
+fa2e 3a 1d 00			ld	a,(0x001d)	; low zweiter parameter -> de 
+fa31 5f				ld	e,a 
+fa32 cd 8a f8			call	SEND 
+fa35 3a 1e 00			ld	a,(0x001e)	; high 
+fa38 57				ld	d,a 
+fa39 cd 8a f8			call	SEND 
+fa3c 3a 23 00			ld	a,(0x0023)	; low dritter parameter 
+fa3f cd 8a f8			call	SEND 
+fa42 3a 24 00			ld	a,(0x0024)	; high 
+fa45 cd 8a f8			call	SEND 
+fa48 c5				push	bc		; retten 
+fa49			 
+fa49 06 10			ld	b,0x10		; 16 Zeichen 
+fa4b 21 69 00			ld	hl,0x0069	; Dateiname versenden (16 Zeichen) 
+fa4e 7e			SA5:	ld	a,(hl) 
+fa4f cd 8a f8			call	SEND		; versenden 
+fa52 23				inc	hl 
+fa53 10 f9			djnz	SA5 
+fa55			 
+fa55 c1				pop	bc		; wiederherstellen 
+fa56 13				inc	de		; erhöhen, um wirklich alle Bytes zu schreiben 
+fa57 62				ld	h,d		; de -> hl kopieren 
+fa58 6b				ld	l,e 
+fa59 ed 42			sbc	hl,bc		; ergebnis ist anzahl programmbytes 
+fa5b 7c				ld	a,h 
+fa5c e7				rst	0x20		; high als hex ausgeben 
+fa5d 06				db	0x06 
+fa5e 7d				ld	a,l 
+fa5f e7				rst	0x20		; low als hex ausgeben 
+fa60 06				db	0x06 
+fa61 e7				rst	0x20		; prst7 
+fa62 02				db	0x02 
+fa63 .. 8d			db	" BYTE",0x8d 
+fa69			 
+fa69 3e 00		SA6:	ld	a,0x00		; alle 100 Byte Sternchen ausgeben 
+fa6b b9				cp	c 
+fa6c 20 04			jr	nz,SA7 
+fa6e 3e 2a			ld	a,'*'		; Sternchen ausgben 
+fa70 e7				rst	0x20 
+fa71 00				db	0x00 
+fa72 0a			SA7:	ld	a,(bc) 
+fa73 cd 8a f8			call	SEND 
+fa76 03				inc	bc 
+fa77 78				ld	a,b		; endadresse erreicht? 
+fa78 ba				cp	d 
+fa79 20 ee			jr	nz,SA6 
+fa7b 79				ld	a,c 
+fa7c bb				cp	e 
+fa7d 20 ea			jr	nz,SA6 
+fa7f			 
+fa7f e7				rst	0x20		; zwei mal neue Zeile 
+fa80 02				db	0x02 
+fa81 0d 8d			db	0x0d,0x8d 
+fa83 c9				ret 
+# End of file cardreader.asm
+fa84
