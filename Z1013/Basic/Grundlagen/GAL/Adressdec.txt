@@ -1,0 +1,23 @@
+Adressdecodierung mittels GAL 
+
+Adressierung ROM in 4 * 16K Segmente
+C000h-FFFFh
+
+Segment 1
+0000-2BFF Basic
+
+Segment 2 
+4000-6BFF Basic
+7800-7FFF Moner SU
+
+Segment 3
+
+
+Segment 4
+
+Freigabe und Adressierung RAM 
+(Einsatz beim z1013.16)
+Freigabe im Bereich 
+4000h-BFFFh (mit Basic und Moner SU)
+4000h-BFFFh und F800h-FFFFh (mit Basic)
+4000h-EBFFh und F800h-FFFFh (ohne Basic)

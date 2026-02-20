@@ -1,0 +1,6 @@
+C000h-EBFFh BASIC
+F000h-F7FFh Monitor -> ausblenden
+F800h-FFFFh Moner-SU
+
+E000-E7FFh HeaderUSB
+F800-FFFFh Moner-SU-USB

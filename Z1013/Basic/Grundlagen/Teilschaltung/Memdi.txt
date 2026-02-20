@@ -1,0 +1,13 @@
+Das Problem des Startup war einfach gelöst. Ein D-FF sperrt /Memdi solange bis nach dem Reset F000 erreicht ist.
+
+Ich setze da an, wo der Schalter gegen GND ist. Also im Originalplan. 
+Demzufolge wird der ROM etwas später freigegeben, was nur im Einschaltmoment nötig ist. 
+Das ist vielleicht 1 bis 2 Sekunden, was der ROM später kommt. 
+Danach kann ich das BASIC mit J E800 starten, da ich die Version 1 aufgebaut habe.
+Wahrscheinlich gab es bei den Leipzigern kein Autoreset, die Schaltung von Volker Pohlers ist recht übersichtlich. 
+Das /MEMDI schaltet nur den Bereich, wo die ROM's sind, im Z1013.64 frei, beim 16er sicher nicht nötig. 
+Leider wird der Bereich des BWS, also die 1kb nicht beachtet, weswegen ich auch das mit dem AB10 von A3 als fehlerhaft betrachte. 
+Es gab anscheinend auch keine Korrektur dieses Schaltungsfehlers, da offensichtlich nicht nachgebaut wurde.
+
+Ich bin aber noch nicht zum Zeichnen der Schaltung gekommen.
+
