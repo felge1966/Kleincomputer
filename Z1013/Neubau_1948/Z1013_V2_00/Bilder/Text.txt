@@ -1,0 +1,10 @@
+Die Platine ist kompatibel zum robotron Z1013 mit 64K Ram.
+
+Zusätzlich an Bord ist ein PS/2 Tastaturinterface und USB V2DIP.
+Über einen Hohlstecker kann die Platine mit Strom versorgt werden.
+Eine Spannung von 7 – 25V= ist notwendig. Ein 9V Steckernetzteil ist dabei.
+Weiterhin lege ich eine PS/2-Tastatur dazu. Das Layout ist fehlerfrei.
+Auf der CD sind Aufbaubeschreibung, Bestückungstool, Schaltplan,
+
+Bilder und Software.
+Platinengröße: 221mm x 194 mm und passt in einem Gehäuse von BAHAR Typ: BDA40011-A1 - Größe 230x200x50mm.
