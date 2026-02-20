@@ -1,0 +1,91 @@
+eeschema (2011-07-08 BZR 3044)-stable  >> Creation date: 30.12.2011 11:18:34
+
+#Cmp ( Sortiert nach Referenz )
+| C1         470µF      ;             
+| C2         100µF      ;             
+| C3         100nF       ;             
+| C4         100nF       ;             
+| C5         100nF       ;             
+| C6         100nF       ;             
+| C7         47nF        ;             
+| C8         47pF        ;             
+| C9         47pF        ;             
+| D1         LED         ;             
+| D2         LED         ;             
+| D3         LED2        ;             
+| F1         1,0A        ;             
+| J1         USB_2       ;             
+| JP1        JUMPER      ;             
+| M1         VDIP1       ;             
+| R1         4,7k        ;             
+| R2         220         ;             
+| R3         220         ; R3          
+| R4         47k         ;             
+| R5         4,7k        ; R3          
+| R6         4,7k        ; R3          
+| R7         220         ;             
+| R8         220         ; R3          
+| R9         100         ;             
+| R10        100         ;             
+| R11        100         ;             
+| R12        100         ;             
+| R13        100         ;             
+| R14        100         ;             
+| R15        4,7k        ;             
+| U1         74LS00      ;             
+| U2         74LS74      ;             
+| U3         74LS05      ;             
+| U4         Z80-PIO     ;             
+| U5         GAL22V10    ; DIP24       
+| U6         GAL22V10    ; DIP24       
+| U7         74LS00      ;             
+| U8         28C64       ; memory-nec-DIL28-6
+| U9         74LS174     ;             
+| X1         KC_MODUL    ;             
+#Ende Cmp
+
+#Cmp ( Sortiert nach Wert )
+| 1,0A         F1        ;             
+| 100          R9        ;             
+| 100          R10       ;             
+| 100          R11       ;             
+| 100          R12       ;             
+| 100          R13       ;             
+| 100          R14       ;             
+| 100nF        C3        ;             
+| 100nF        C4        ;             
+| 100nF        C5        ;             
+| 100nF        C6        ;             
+| 100µF       C2        ;             
+| 220          R2        ;             
+| 220          R3        ; R3          
+| 220          R7        ;             
+| 220          R8        ; R3          
+| 28C64        U8        ; memory-nec-DIL28-6
+| 4,7k         R1        ;             
+| 4,7k         R5        ; R3          
+| 4,7k         R6        ; R3          
+| 4,7k         R15       ;             
+| 470µF       C1        ;             
+| 47k          R4        ;             
+| 47nF         C7        ;             
+| 47pF         C8        ;             
+| 47pF         C9        ;             
+| 74LS00       U1        ;             
+| 74LS00       U7        ;             
+| 74LS05       U3        ;             
+| 74LS174      U9        ;             
+| 74LS74       U2        ;             
+| GAL22V10     U5        ; DIP24       
+| GAL22V10     U6        ; DIP24       
+| JUMPER       JP1       ;             
+| KC_MODUL     X1        ;             
+| LED          D1        ;             
+| LED          D2        ;             
+| LED2         D3        ;             
+| USB_2        J1        ;             
+| VDIP1        M1        ;             
+| Z80-PIO      U4        ;             
+#Ende Cmp
+
+#Ende der Liste

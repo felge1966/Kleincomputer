@@ -1,0 +1,23 @@
+Die Dateien haben folgende Bedeutung:
+
+VDIP1.pro	-	Das Gesamtprojekt
+VDIP1.sch	-	Der Schaltplan
+VDIP1.pdf	-	Der schaltplan, gedruckt mit FreePDF
+VDIP1.lst	-	Die Stückliste als Textdatei, erzeugt aus dem Schaltplan
+VDIP1.csv	-	Die Stückliste als Tabelle, erzeugt aus dem Schaltplan
+VDIP1.ods	-	Stückliste / Bestellliste, weiterbearbeitet aus *.csv
+VDIP1.net	-	Die Netzliste für die Platine, erzeugt aus dem Schaltplan (enthält auch Zuordnung Footprints)
+VDIP1.cmp	-	Die Zuordnung der Bauteile zu den Footprint-Layouts (lässt sich auch mit PCBnew erzeugen)
+VDIP1.dsn	-	Exportierte Specctra Design Datei für der Freerouter www.freerouting.net
+VDIP1.ses	-	Specctra Session Datei des Freerouters zum rückimportieren
+VDIP1.brd	-	Die Leiterplatte, erzeugt mit PCBnew
+VDIP1-cache.lib	-	Bibliothek mit den im Schaltplan verwendeten Schaltzeichen
+VDIP1.rpt	-	Bauteilreport, erzeugt mit PCBnew
+CDIP1.cad	-	Platine exportiert im GenCAD-Format
+VDIP1.drl	-	Bohrdatei, erzeugt mit PCBnew / Fertigungsdateien / Bohrdatei
+			Durchkontaktierungen:	0,6mm
+			Normale Bohrungen:	0,8mm
+			USB-Buchse, Anschlüsse:	1,0mm
+			USB-Buchse, Masse:	2,3mm
+			Platinenbohrungen:	3,0mm
+			VDIP1-Fassung (M1):	1,2mm
