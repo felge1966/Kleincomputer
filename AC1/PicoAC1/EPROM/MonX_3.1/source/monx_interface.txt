@@ -1,0 +1,227 @@
+Schnittstellenbeschreibung Mon V3.1 + Monitorerweiterung monx
+=============================================================
+
+Sprungverteiler V3.1 (Ur-Monitor)
+---------------------------------
+0x07EB:     jp	MS30		; 30 ms	warten
+0x07EE:     jp	OUTHEX      ; Ausgabe HL - 4-stellig Hex 
+0x07F1:     jp	OUTHL		; Ausgabe HL hexadezimal
+0x07F4:     jp	INLINE		; Zeile	eingeben
+0x07F7:     jp	INHEX       ;
+0x07FA:     jp	TASTE       ;
+0x07FD:     jp	GETCO1      ; Rücksprung zum Monitor
+
+Systemzellen
+0x181A:     SOIL    ds 2    ;Start of InputLine
+0x185B:     ARG1    ds 2    ;Eingabeargumente
+0x185D:     ARG2    ds 2
+0x185F:     ARG3    ds 2
+
+weitere s. Listing
+https://github.com/hcddr/ac1/blob/master/monitor/mon_v31_16-as.lst
+
+Beschreibung: s. Funkamateur 1983 - 85
+
+*******************************************************************
+
+-----------------------------------------------------------------------
+Speichern und lesen von Dateien durch Anwenderprogramme, gundsätzliches
+-----------------------------------------------------------------------      
+Das Lesen und Schreiben besteht grundsätzlich aus mehreren Phasen.
+
+Schreiben
+    Initialisieren, der Speicherzellen - ARG1..3 / Dateityp (1 Zeichen) / Dateiname (max 16 Zeichen), danach
+        CALL FOPENW
+    Daten schreiben
+        CALL FCHRW -> als einzelne Zeichen im Akku, oder
+        CALL FBLKW -> Als Speicherbereich ARG1 bis ARG2
+    Fehlerprüfung
+        CALL FGETRE          
+
+Lesen
+    Initialisieren Dateiname (max 16Zeichen), danach
+        CALL FOPENR
+    Fehlerprüfung, Abbruch bei Fehler
+        CALL FGETRE
+    optional ändern der Anfangsadresse in ARG1
+    Daten lesen
+        CALL FCHRR -> als Einzelzeichen im Akku
+        CALL FBLKR -> komplette Datei in Speicherbereich ab ARG1
+    Fehlerprüfung nach Abschluss
+        CALL FGETRE
+
+Bei den Einzelbyte-Operationen ist vom Anwenderprogramm sicherzustellen, dass alle Zeichen entspr.
+der Längenangabe gelesen werden (Rückgabe Z-Flag nach letzter Operation).
+Andernfalls blockiert die ZCOM bis zum Timeout.
+
+Keine Pause > 1000ms zwischen zusammenhängenden  Operationen, sonst Timeout der ZCOM
+
+Die Speicherzellen / Systemzellen der Monitorerweiterung sollten nicht direkt adressiert werden.
+Es ist damit zu rechnen, dass es Einwände gegen die Adresslage geben wird.
+Die Adressierung sollte immer über die Funktion "FGETSY" erfolgen.
+
+-------------------------------------------------------------------------------------
+
+
+
+
+Sprungverteiler monX (in Arbeit)
+--------------------
+
+0x0810:     JP  CLRBUF          ;temp. Puffer f.Dateinamen löschen (ext.Save/Load)
+                                ;Länge 16Bytes, füllen mit 0x20
+
+0x0813      JP  FGETSY          ;Adresse der Systemzellen f. Dateioperationen
+                                ;   wg mögl. Änderungen sollten die Zellen in Anwenderprogrammen
+                                ;   nicht direkt adressiert werden
+                                ;IN:  HL - Offset der gesuchten Variablen (s.u.)
+                                ;OUT: HL - Adresse der Variablen 
+
+0x0816      JP  GETTXT          ;Tetxzeile vom BWS in temp. Textbuffer laden
+                                ;AnfangsAdr BWS: (SOIL)
+                                ;Kopieren bis zum nächsten Space (0x20), max 16Zeichen
+                                ;HL wird zerstört
+
+0x0819      JP  GETTX0          ;wie oben
+                                ;Anfangsadr BWS in HL
+
+0x081C      JP  PRNTXA          ;Senden des Zeichens im Akku via ZCOM
+                                ;nur in Grundstellung ZCOM möglich
+                                ;PrintToFile muss im picoIO aktiviert sein,
+                                ;sonst wird das Zeichen im picoIO verworfen
+
+0x081F      JP  CRC16           ;CRC16 eines Speicherblockes berechnen
+                                ;CRC16-CCITT / Poly 0x1021 / Seed: 0xFFFF
+                                ;Eingabe IX: Anfangsadresse / DE: Länge
+                                ;Ausgabe: HL
+                                ;geändert: IX,DE,BC,AF,HL
+                          
+0x0822      JP  FOPENW          ;Datei zum externen Schreiben initialisieren
+                                ;Eingang:
+                                ;   (ARG1..3) Anfang, Ende, Start(optional) - s.u.
+                                ;   FTYP - 1 Char, Dateityp f. Headereintrag
+                                ;   FTYP = 0x00,  Spezialfall: Speichern ohne Header
+                                ;   TXTBUF - String max 16 Zeichen f. Dateinamen    
+                                ; bei Nachfolgefunktion "FCHR" - einzelzeichen schreiben:
+                                ;   Die in den Argumenten angegebenen Werte müssen nicht dem tasächlichen
+                                ;   Speicherbereich entsprechen. Es muss lediglich (ARG2-ARG1)+1 = Gesamtlänge
+                                ;   betragen.
+                                ; bei Nachfolgefunktion "FBLKW"-> ARG1 bestimmt die Anfangsadresse im Speicher
+                                ; ARG1..3 werden in den Header geschrieben
+                                ;Ausgang: (nur zur internen Verwendung)
+                                ;   (FLEN):  Gesamtlänge in Bytes
+                                ;   (FPOS):  0000h Zähler Zeichen schreiben
+                                ;   (FCSUM): 0000h Anfangswert CSum	
+                                ;   kein Fehlercode nach dieser Operation
+                                ;SD-Operation erfolgt erst nach Schreiben des letzten Zeichens 
+
+0x0825      JP  FCHRW           ;ext. Schreiben eines Zeichens in Datei
+                                ;Operation muss zuvor mit "FOPENW" initialisiert worden sein
+                                ;Eingang: Zeichen im Akku
+                                ;Ausgang:
+                                ;   Z-Flag = 0 nach Schreiben des letzten Zeichens,  
+                                ;       erst nach dem letzten Zeichen wird die Datei 
+                                ;       auf die SD-Karte geschrieben
+                                ;   nach dem letzten Byte: 
+                                ;   	(RESCOD) - 2Bytes Fehlercode, 0x0000 == Ok
+            
+0x0828      JP  FBLKW           ;ext Schreiben eines Speicherbereichs in Datei
+                                ;wie "FCHRW"
+                                ;Operation muss zuvor mit "FOPENW" initialisiert worden sein
+
+0x082B      JP  FOPENR          ;Datei zum externen Lesen initialisieren
+                                ;   nur Dateien mit AC1-Header lesbar, sonst Fehlermeldung
+                                ;Eingang:
+                                ;   TXTBUF - Dateiname max 16Zeichen
+                                ;Ausgang:
+                                ;   ARG1..3   Anfang, Ende, Start aus Header
+                                ;   FTYP      Headerwert Dateityp
+                                ;   TXTBUF    Headereintrag Info-Text 16Zeichen
+                                ;   FRESCO    Ergebniscode Datei initialisieren, 0x0000 == Ok
+
+0x082E      JP  FCHRR           ;ext Lesen eines Bytes aus Datei
+                                ;Operation muss zuvor mit "FOPENR" initialisiert worden sein                  
+                                ;Ausgang:
+                                ;   A       gelesenes Zeichen
+                                ;   Zy=1    nach dem Lesen des letzten Zeichens
+                                ;   FRESCO  Ergebniscode
+                                ;Es müssen alle Zeichen (entspr. Dateilänge) gelesen werden !
+
+0x0831      JP  FBLKR           ;ext Lesen eines Datei in einen Speicherbereich
+                                ;Operation muss zuvor mit "FOPENR" initialisiert worden sein
+                                ;ARG1 - Anfangsadresse
+                                ;   wird in "FOPENR" aus DateiHeader initialisiert
+                                ;   kann durch Anwenderprogramm vor Aufruf geändert werden
+                                ;Ausgang:
+                                ;   FRESCO  Ergebniscode
+
+0x0834      JP  FGETRE          ;Rückgabe des ResultCodes (FRESCO) der letzten DateiOP
+                                ;Ausgang:
+                                ;   HL = 0000h -> Ok | sonst Fehlercode (H-/L-Byte)
+                                ;   Zy = 1 -> Ok | Zy = 0 -> Fehler
+ 
+0x0837      JP  VERSTR          ;Bildschirmausgabe (RST 18h) der Version Monx-Erweiterung
+
+
+
+Systemzellen monX
+nicht direkt adressieren, wg möglicher Verschiebungen
+--> CALL  FGETSY 
+-----------------------------------------------------
+1880h       FRESCO  DEFS 2      ;Fehlercode nach Operation, 0000h => Ok
++2          FLEN    DEFS 2      ;Länge des Speicherblocks (intern)
++4          FPOS    DEFS 2      ;Bytepos im Speicherblock (intern)
++6          FRESV   DEFS 2      ;Reserve f. Ergänzung
++8          FTYP    DEFS 2      ;Dateityp (Header), 00h => Speichern ohne Header
++9          TXTBUF  DEFS 16     ;Übergabepuffer Dateiname, 16Z oder Ende mit 20h
++19h        FCSUM   DEFS 2      ;Merkzelle f. lfd. CSum-Operationen
+
+
+
+ResultCodes f. Dateioperationen (FRESCO)
+---------------------------------------- 
+0000h - in jedem Fall: Operation war Ok
+
+Datei speichern (Ergebniscode nach dem letzten Byte)
+    LowByte - Checksummen- / Übertragungsfehler
+        00h  - Ok
+        Bit0 - CSum Kommandozeile
+        Bit1 - CSum Block
+        Bit2 - CSum letzter Block
+    Highbyte - Fehlercode SD-KartenOperation
+        00h  - ok        
+        01h  - keine SD-Karte
+        02h  - Fehler beim mounten
+        03h  - Fehler beim Öffnen der Datei
+        04h  - Fehler beim Header schreiben
+        05h  - Fehler beim Daten schreiben
+        14h  - Fehler beim Verzeichniswechsel
+
+Datei laden - Ergebniscode nach Kommandoübertragung
+    LowByte        
+        00h  - Ok
+        01h  - CSum Übertragung Dateiname
+        FEh  - Timeout, picoIO antwortet nicht in der vorgegebenen Zeit
+        FFh  - CSum zurück gelieferter Header
+    HighByte
+        00h  - Ok        
+        01h  - keine SD-Karte
+        02h  - Fehler beim mounten
+        03h  - Fehler beim Öffnen der Datei
+        06h  - Fehler beim Daten lesen
+        07h  - kein AC1-Format (Prüfung 3x MagicByte im Header)
+        14h  - Fehler beim Verzeichniswechsel
+        
+Datei laden - nach dem letzten geladenen Byte
+    LowByte
+        00h  - Ok
+        Bit7 - CSum Block
+    HighByte
+        immer 00h
+
+Die CSum-Prüfung ist eine 8Bit-ÜberlaufAddition
+CRC16-Prüfung dauert auf Z80-Seite deutlich zu lange
+
+
+      
+    
