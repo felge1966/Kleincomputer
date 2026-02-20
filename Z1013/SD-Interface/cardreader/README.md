@@ -1,6 +1,7 @@
 <p align="center">
-  <img src="https://github.com/devicplan/z80/blob/main/cardreader/pictures/z1013_cardreader_prototype_f.JPG">
+  <img src="https://github.com/felge1966/Kleincomputer/blob/main/Z1013/SD-Interface/cardreader/pictures/z1013_cardreader_prototype_f.JPG">
 </p>
+
 
 
 # Zusatzkarte Programmspeicher mit SD Karte
