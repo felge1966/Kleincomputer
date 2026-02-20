@@ -1,0 +1,34 @@
+Inhalt:
+=======
+
+prl2com.com	Tool, um verschiebbare Programme (wie den RAF-Treiber) zu erstellen (vp)
+prl2com.mac	Quelltext (vp)
+prl2com.prn	Listing
+
+Raf2x24O.mac	Quelltext für RAM-Floppy-Treiber (vp)
+		s. http://www.robotrontechnik.de/html/eigenbau/raf2008.htm
+		Es können diverse Parameter wie Anz. der unterstützten RAF,
+		Laufwerksbuchstabe und I/O-Port festgelegt werden.
+		Der Quelltext kann den orignalen Treiber RAFCPM.COM erzeugen,
+		ebenso die Versionen für den KC87, etc.
+raf2x24o.prn	Listing
+
+Rafcpmp.mac	Quelltext für RAM-Floppy-Treiber Version RAFCPMP.COM mit Parity (vp)
+rafcpmp.prn	Listing
+
+Rafbic.mac	Quelltext für RAM-Floppy-Treiber Version RAFBIC20.COM ohne parity (vp, dkt)
+rafbic.prn	Listing
+
+
+assemblieren:
+=============
+
+m80.com =treiber
+link.com treiber[op]
+prl2com treiber.prl
+
+
+
+
+Volker Pohlers
+hc-ddr.hucki.net
