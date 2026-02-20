@@ -1,0 +1,91 @@
+10 REM Initialisierung BWS-RAM nach H.Poppe
+20 REM (c) M.Haustein MHC 01.03.2014
+30 REM BWS-Adresse 01Xh (Schreiben Bit 0 = 18dez)
+40 REM Anpassung BWS-Adresse in OUT-Befehlen
+50 WINDOW 0, 31, 0, 31
+60 CLS
+70 PRINT "   Initialisierung COLOR-BWS  "
+80 PRINT "   =========================  "
+90 PRINT
+100 INPUT "Anfangsadresse hex. 4-st.:";START$
+110 L=LEN(START$)
+120 IF L<>4 THEN GOTO 60
+130 D=0
+140 FOR I=1 TO L
+150 T$=MID$(START$,I,1)
+160 IF T$>="A" AND T$<="F" THEN U=ASC(T$)-55: GOTO 190
+170 IF T$>="0" AND T$<="9" THEN U=VAL(T$): GOTO 190
+180 PRINT "KEINE HEXADEZIMALZAHL!": PAUSE 20: GOTO 100
+190 D=U*16^(L-I)+D
+200 NEXT I
+210 START=D
+220 INPUT "Endadresse hexadez. 4-st.:";FINISH$
+240 L=LEN(FINISH$)
+250 IF L<>4 THEN GOTO 60
+260 D=0
+270 FOR I=1 TO L
+280 T$=MID$(FINISH$,I,1)
+290 IF T$>="A" AND T$<="F" THEN U=ASC(T$)-55: GOTO 320
+300 IF T$>="0" AND T$<="9" THEN U=VAL(T$): GOTO 320
+305 PRINT
+310 PRINT "KEINE HEXADEZIMALZAHL!": PAUSE 20: GOTO 220
+320 D=U*16^(L-I)+D
+330 NEXT I
+340 FINISH=D
+350 IF START>FINISH THEN GOTO 60
+360 INPUT "BWS fuellen m. ASCII dez.:";ZEI
+370 ZEI=INT(ZEI)
+380 IF ZEI<32 GOTO 360
+390 IF ZEI>255 GOTO 360
+400 PRINT
+410 PRINT "Code Zeichenfarbe schwarz = 0"
+420 PRINT "                  rot     = 1"
+430 PRINT "                  gruen   = 2"
+440 PRINT "                  gelb    = 3"
+450 PRINT "                  blau    = 4"
+460 PRINT "                  violett = 5"
+470 PRINT "                  tuerkis = 6"
+480 PRINT "                  weiss   = 7"
+490 INPUT "Eingabe Code Zeichenfarbe: ";TEXTFARBE
+500 TEXTFARBE=INT(TEXTFARBE)
+510 IF TEXTFARBE<0 THEN GOTO 400
+520 IF TEXTFARBE>7 THEN GOTO 400
+530 PRINT
+540 PRINT "Code Hintergrund schwarz =  0"
+550 PRINT "                 rot     = 16"
+560 PRINT "                 gruen   = 32"
+570 PRINT "                 gelb    = 48"
+580 PRINT "                 blau    = 64"
+590 PRINT "                 violett = 80"
+600 PRINT "                 tuerkis = 96"
+610 PRINT "                 weiss   =112"
+620 INPUT "Eingabe Code Hintergrund:";BACKGND
+630 BACKGND=INT(BACKGND)
+640 IF BACKGND=0 THEN GOTO 730
+650 IF BACKGND=16 THEN GOTO 730
+660 IF BACKGND=32 THEN GOTO 730
+670 IF BACKGND=48 THEN GOTO 730
+680 IF BACKGND=64 THEN GOTO 730
+690 IF BACKGND=80 THEN GOTO 730
+700 IF BACKGND=96 THEN GOTO 730
+710 IF BACKGND=112 THEN GOTO 730
+720 GOTO 530
+730 CODE=TEXTFARBE+BACKGND
+750 PRINT
+760 PRINT "Initialisierung BWS laeuft."
+770 LAENGE=INT(FINISH-START+0.5)+1
+780 START=INT(START+0.1)-1
+790 FOR K=1 TO LAENGE
+800 START=START+1
+810 IF START>=32768 THEN AB=START-65536: ELSE AB=START
+820 OUT 18, 1
+830 POKE(AB),CODE
+840 OUT 18, 0
+850 POKE(AB),ZEI
+860 NEXT K
+870 PRINT
+880 ENTE$=""
+890 INPUT "BWS noch einmal fuellen? (J)"; ENTE$
+900 WINDOW 0, 31, 0, 31
+910 IF ENTE$="J" THEN GOTO 60
+920 CLS

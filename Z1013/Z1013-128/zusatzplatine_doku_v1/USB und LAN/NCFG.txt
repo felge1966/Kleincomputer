@@ -1,0 +1,3 @@
+Dient als INI-Datei zum Einrichten der Netzwerkadresse vom WIZNET mit -i und -m.
+
+Aufruf: NCFG12 NAME
