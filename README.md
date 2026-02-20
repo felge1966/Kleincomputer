@@ -3,6 +3,8 @@
 - Z9001, KC85/1 und KC87 
 - MRB Z1013
 - AC1 (org / AC1-2010 / Neubauprojekt AC1-2017 /AC1Pico)
+- Polycomputer Poly880
+- LC80 (LC80 org. / LC80ex)
 
 ## Dev Software:
  - WinCupl
