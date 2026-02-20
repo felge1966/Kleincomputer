@@ -1,0 +1,52 @@
+title    RAF 2008
+pattern  GATES
+revision A
+author   Graemer
+date     23.4.08 - 07.10.08
+
+chip GATES GAL16V8
+
+;pin 1    2    3    4    5     6     7     8     9    10
+     A2   A3   A4   A5   A6   A7    WR    ADV   PROT GND
+;pin 11   12   13   14   15   16    17    18    19    20
+     A0   WR1  RD   IORQ RAF  WRO   JP2   JP1   RDO  VCC
+
+
+@UES RAF2008
+
+
+; fuer BC
+; Daten RAF 0-3  88h, 8Ah, 8Ch, 8Eh
+; Track RAF 0-3  89h, 8Bh, 8Dh, 8Fh
+
+; fuer BIC und KC87
+; Daten RAF 0-3  20h, 22h, 24h, 26h
+; Track RAF 0-3  21h, 23h, 25h, 27h
+
+; JP1 = x8 / xC bzw. x0 / x4
+; JP2 = 8x / 2x
+
+
+;       Basis I/O-Adresse fuer die 4 RAFs
+        @define BASIS20      "/IORQ*/A7*/A6*A5*/A4*/A3*/JP1*/A2*JP2"
+        @define BASIS24      "/IORQ*/A7*/A6*A5*/A4*/A3*JP1*A2*JP2"
+        @define BASIS88      "/IORQ*A7*/A6*/A5*/A4*A3*/JP1*/A2*/JP2"
+        @define BASIS8C      "/IORQ*A7*/A6*/A5*/A4*A3*JP1*A2*/JP2"
+        @define WR89         "BASIS88*/WR*A0"
+        @define WR8D         "BASIS8C*/WR*A0"
+        @define WR21         "BASIS20*/WR*A0"
+        @define WR25         "BASIS24*/WR*A0"
+        @define RAF88        "BASIS88*/A0*/PROT*/ADV"
+        @define RAF8C        "BASIS8C*/A0*/PROT*/ADV"
+        @define RAF20        "BASIS20*/A0*/PROT*/ADV"
+        @define RAF24        "BASIS24*/A0*/PROT*/ADV"
+
+equations
+
+        RDO   = /RD
+        WRO   = /WR
+        /WR1  = WR89 + WR8D + WR21 + WR25      ; Trackregister schreiben
+        /RAF  = RAF88 + RAF8C + RAF20 + RAF24  ; Enable RAF
+
+
+; end of GATES
