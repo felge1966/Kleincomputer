@@ -1,0 +1,4 @@
+Mit J F800 wird eine Umladeroutine ausgeführt und das USB-Modul gestartet.
+Anschließen mit @L den USB-Stick laden.
+Mit "Enter" wird das Inhaltsverzeichnis angezeigt
+oder mit dem Programmname (fals bekannt) das Programm gestartet.

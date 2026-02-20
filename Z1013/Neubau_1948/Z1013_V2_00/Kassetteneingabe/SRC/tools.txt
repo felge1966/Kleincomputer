@@ -1,0 +1,10 @@
+Z802COM.PL	schneidet den Headersave-Header (die ersten 32 Byte der Datei) ab,
+		damit werden z.B. die CP/M-Programme direkt für CP/M nutzbar
+
+cfx.exe		dekomprimiert CP/M-Dateien (Squeezed,Crunched,Library,...)
+		z.B. cfx /d sys.dqc erzeugt sys.doc
+
+ws2txt.pl	konvertiert Wordstar-Texte in reinen ASCII-Code
+
+Z802TXT.PL	konvertiert Z80-Textdateien in reinen ASCII-Code
+
